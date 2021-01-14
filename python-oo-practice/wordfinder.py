@@ -16,7 +16,7 @@ class WordFinder:
     def random(self):
         """ Choose a word at random from the list """
         return self._words[int(np.random.randint(self._lines))]
-
-w = WordFinder("python-oo-practice/words.txt")  
-for i in range(1,6):
-    print("Word {} found was: {}".format(i,w.random()))
+if __name__ == '__main__':
+    w = WordFinder("python-oo-practice/words.txt")  
+    for i in range(1,6):
+        print("Word {} found was: {}".format(i,w.random()))
