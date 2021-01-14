@@ -1,0 +1,27 @@
+# nouns
+apple
+tree
+moose
+building
+electron
+philosophy
+termite
+hammer
+
+#verbs
+bring
+want
+meet
+join
+run
+ask
+hope
+demonstrate
+
+# adjectives
+beautiful
+blue
+clear
+dark
+warm
+

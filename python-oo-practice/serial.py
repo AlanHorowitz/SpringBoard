@@ -27,5 +27,11 @@ class SerialGenerator:
         return (self._current - 1)
     def reset(self):
         self._current = self._start
+    def __repr__(self):
+        return "<SerialGenerator start={} next={}>".format(self._start, self._current)
     
+s = SerialGenerator(start=100)
+print(s)
+s.generate()
+print(s)
 
