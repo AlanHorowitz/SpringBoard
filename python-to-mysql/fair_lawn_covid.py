@@ -54,6 +54,7 @@ def print_fl_covid_info():
             print("found duplicate paragraphs with marker string")
         return
 
+    # Data of interest is in the two <strong> tags.
     strong_tags = [s for s in p_children_tags[0] if s.name == 'strong']
     if len(strong_tags) != 2:
         print("Format of parargaph not as expected")
