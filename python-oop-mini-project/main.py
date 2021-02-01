@@ -1,6 +1,8 @@
 from banking import Bank
 
 #  Deal with the terminal user
+# high level screens (interface navigation) can run in common loop, but Customers and Accounts collect their own information for the user
+
 def welcome_screen():
     print("-----------------------------------------")
     print("     Welcome to Simple Friendly Bank     ")
@@ -62,9 +64,17 @@ def new_account_screen():
                 input()
                 return new_account_screen
 
-
         elif s == "1":
-            print("OK, Let's sign you up")
+            print("\nOK, Let's create your new account")
+            customer_id = input("\nPlease enter your customer id")
+            customer_pin = input("\nPlease enter your pin")
+            if bank.check_credentials(customer_id, customer_pin):
+                # what kind of account do you want to open?
+                new_account = bank.create_new_account(customer_id)
+                new_account.get_options()
+            else:
+                pass
+
             return new_account_screen
         elif s == "3":
             return welcome_screen
@@ -79,6 +89,10 @@ if __name__ == '__main__':
 
     bank = Bank()
 
+    # bank open
+    # bank printtransaction
+    #  bank.close
+    # bank.inventory
     next = welcome_screen
     
     # process screens until done
