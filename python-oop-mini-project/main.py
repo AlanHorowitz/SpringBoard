@@ -1,4 +1,5 @@
 from banking import Bank
+from banking import CustomerAlreadyExistsException
 
 #  Deal with the terminal user
 # high level screens (interface navigation) can run in common loop, but Customers and Accounts collect their own information for the user
@@ -41,28 +42,19 @@ def new_account_screen():
 
     s = ""
     while s != "3":
+
         print("Please Enter from menu. Use [3] to quit: ", end='')
         s = input().strip()
         if s == "2":
-            print("\nGreat, Let's sign you up. We need just a little information. Please enter the following:")
-            first_name = input("\nYour first name            : ") 
-            last_name =  input("\nYour last name             : ")     
-            ssn =        input("\nYour social security number: ")    
-            if bank.has_customer(first_name, last_name, ssn):
-                print("\nYou are an existing customer! Press enter to continue")
-                input()
-                return new_account_screen
-            else:
-                new_cust = bank.create_new_customer(first_name, last_name, ssn)
-                new_cust.street_address = input("\nYour street address        : ") 
-                new_cust.state =          input("\nYour state                 : ")     
-                new_cust.zip_code=        input("\nYour zip code              : ")
-                new_cust.pin =            input("\n\nNow, choose a personal identification number: ")
-                bank.persist_customers()
-                print("\nCongratulations, You are our new customer! Your customer id is: {n}.".format(n='1')) 
+            try:  
+                cust = bank.create_new_customer()  
+                print("\nCongratulations, You are our new customer! Your customer id is: {n}.".format(n=cust.customer_id)) 
                 print("\nPlease remember this id and your pin for future transactions.\n\nPress enter to continue")
-                input()
-                return new_account_screen
+            except(CustomerAlreadyExistsException):
+                print("\nCustomer was a duplicate and could not be added.\n\nPress enter to continue")
+                
+            input()
+            return new_account_screen
 
         elif s == "1":
             print("\nOK, Let's create your new account")
@@ -83,6 +75,13 @@ def new_account_screen():
 
 def existing_account_screen():
     print("Existing Account Screen")
+    try:
+        acct = bank.get_validated_account()
+        option = acct.get_options()
+        transaction_data = option.get_transaction_data()
+        acct.run_transaction(option, transaction_data)
+    except Bank.AccountVaidationError:
+        print("bad account number or id")
     return welcome_screen
 
 if __name__ == '__main__':
