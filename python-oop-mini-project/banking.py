@@ -122,7 +122,15 @@ class Bank():
 
         return self.welcome_screen
 
+    # replacement routime --  Open Checking or savings account by interacting with the metadata
+    # prompt user for data
+    # consider skipping defaulted parms.  Account validates.
+    def open_account(self, account):
     
+        open_metadata = account.get_open_metadata()
+        open_metadata_parameters = open_metadata['open'][1]
+        kwargs = {parm : input(text) for parm, text in open_metadata_parameters}
+        account.open(**kwargs)
 
     def run(self):
 
