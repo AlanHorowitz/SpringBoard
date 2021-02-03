@@ -51,7 +51,7 @@ class Account():
             print(f"Please Enter from menu. Use [{i}] to quit: ", end='')
             s = input().strip()
             if s in d:
-                if d[s] = Account.QUIT:
+                if d[s] == Account.QUIT:
                     raise AccountTransactionAbortedException
                 else:
                     getattr(self, d[s])()  # call the function
