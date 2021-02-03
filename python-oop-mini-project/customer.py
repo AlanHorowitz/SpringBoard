@@ -6,20 +6,20 @@ class Customer():
     CUSTOMER_ID_PREFIX = "CUST"
 
     def __init__(self, id):
-        self._customer_id = Customer.CUSTOMER_ID_PREFIX + str(id)
-        accounts = []
+        self.customer_id = Customer.CUSTOMER_ID_PREFIX + str(id)
+        self.accounts = []
 
     def __eq__(self, other):
         if isinstance(other, Customer):
-            if self.first_name == other.first_name and
-               self.last_name == other.last_name and
-               self.ssn == other.ssn:
+            if ((self.first_name == other.first_name) and 
+                (self.last_name == other.last_name) and 
+                (self.ssn == other.ssn)):
                     return True
         return False
              
     def add_account(self, account):
-        accounts.append(account)
-        
+        self.accounts.append(account.account_id)
+
     def load_customer(self):
         '''
         Retrieve customer from persistence 

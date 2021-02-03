@@ -1,11 +1,18 @@
 from customer import Customer, CustomerAlreadyExistsException
+from account import Account, AccountTransactionAbortedException
 
 class Bank():
 
     customers = {}
     accounts = {}
     next_customer_id = 1
-    
+    next_account_id = 1
+
+    class AccountValidationException(Exception):
+        pass
+    class InvalidCredentialsException(Exception):
+        pass
+
     def welcome_screen(self):
         print("-----------------------------------------")
         print("     Welcome to Simple Friendly Bank     ")
@@ -18,8 +25,7 @@ class Bank():
         print("[3] Quit")
         print("")
 
-        s = ""
-        while s != "3":
+        while True:
             print("Please Enter from menu. Use [3] to quit: ", end='')
             s = input().strip()
             if s == "1":
@@ -54,14 +60,17 @@ class Bank():
                 customer_pin = input("\nPlease enter your pin")
                 try:
                     cust = self.validate_customer_credentials(customer_id, customer_pin)
-                    acct = self.create_new_account(cust)
-                    print("\nCongratulations, Your new {type} account has been created! Your account id is {id}.".format(n=cust.customer_id)) 
+                    acct = Account.create_new_account(cust, self.next_account_id)
+                    print("\nCongratulations, Your new {type} account has been created! Your account id is {id}.".format(n=acct.customer_id)) 
                     print("\nPlease remember this id and your pin for future transactions.")
                     next_screen = self.welcome_screen
                 except(self.InvalidCredentialsException):
                     print("\nPin is not valid for customer id {n}. ".format(n=cust.customer_id))
                     next_screen = self.new_account_screen 
                     pass
+                except(AccountTransactionAbortedException):
+                    pass
+
 
                 input("\n\nPress enter to continue ")
                 return next_screen
@@ -85,23 +94,35 @@ class Bank():
                 return self.welcome_screen
 
     def existing_account_screen(self):
-        print("Existing Account Screen")
+        print("-----------------------------------------")
+        print("         Access existing account         ")
+        print("-----------------------------------------")
+        print("")
+        print("Are you an existing customer?")
+        print("")
+        print("[1] Yes" )
+        print("[2] No")
+        print("[3] Quit")
+        print("")
         try:
             acct = self.get_validated_account()
             option = acct.get_options()
             transaction_data = option.get_transaction_data()
             acct.run_transaction(option, transaction_data)
 
-        except self.AccountValidationError:
+        except(self.AccountValidationError):
             print("bad account number or id")
 
-        except self.TransactionFailedError:
+        except(self.TransactionFailedError):
             print("bad account number or id")
+
+        except(AccountTransactionAbortedException):
+            pass
+
 
         return self.welcome_screen
 
-    class InvalidCredentialsException(Exception):
-        pass
+    
 
     def run(self):
 
@@ -132,11 +153,21 @@ class Bank():
 
         return cust
 
-    def create_new_account(self, cust):
+    def get_validated_account(self):
         
-        acct = Account.create_new_account(cust, self.next_account_id)
-        # add to list
-        pass
+        account_id =  input("\Please enter your account id ").strip()     
+        pin        =  input("\nPlease enter your PIN ").strip()
+        custs = [cust for cust in self.customers.values() 
+                     if account_id in cust.accounts and cust.pin == pin]
+        if len(custs) != 1:
+            raise(self.AccountValidationException)
+        cust = custs[0]
+        acct = Account.create_new_account(custs[0].id, self.next_account_id)
+        cust.add_account(acct)
+        self.accounts[acct.account_id] = acct
+        self.next_account_id += 1
+        return acct
+        
 
     def validate_customer_credentials(self, customer_id, customer_pin):
         '''
