@@ -23,10 +23,10 @@ class Customer():
 
     def get_info_metadata(self):
 
-        return {'set_info': ('No Display',[('first_name', 'Please enter your first name:'),
-                                             ('last_name', 'Please enter your last name:'),
-                                             ('social_security_number', 'Please enter your social security number'),   
-                                            ('pin','Please enter your personal identification number' )])}
+        return {'set_info': ('No Display',[('first_name', 'Please enter your first name: '),
+                                             ('last_name', 'Please enter your last name: '),
+                                             ('social_security_number', 'Please enter your social security number: '),   
+                                            ('pin','Please enter your personal identification number: ' )])}
         
     def set_info(self, **kwargs):
 
@@ -50,6 +50,10 @@ class Customer():
     @property
     def social_security_number(self):
         return self._social_security_number
+
+    @property
+    def pin(self):
+        return self._pin
 
     def add_account(self, account_id):
         self._accounts.append(account_id)
