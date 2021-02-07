@@ -23,10 +23,10 @@ class Customer():
 
     def get_info_metadata(self):
 
-        return {'set_info': ('No Display',[('first_name', 'Please enter your first name: '),
-                                             ('last_name', 'Please enter your last name: '),
-                                             ('social_security_number', 'Please enter your social security number: '),   
-                                            ('pin','Please enter your personal identification number: ' )])}
+        return {'set_info': ('No Display',[('first_name', 'Please enter your first name: ', 'string'),
+                                             ('last_name', 'Please enter your last name: ', 'string'),
+                                             ('social_security_number', 'Please enter your social security number: ', 'string'),   
+                                            ('pin','Please enter your personal identification number: ', 'string' )])}
         
     def set_info(self, **kwargs):
 

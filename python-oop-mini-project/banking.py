@@ -24,6 +24,35 @@ def select_from_menu(header, question, options):
         if s.isnumeric() and int(s) in range(1, len(options)+1):
             return options[int(s)-1][1]
 
+def get_parameter_of_type(text, parm_type):  
+    while True:
+        s = input(text).strip()
+        if parm_type == 'non_negative_float':
+            try:
+                typed_value = round(float(s),2)
+                if typed_value < 0:
+                    print("Value must be a non-negative float (e.g 100.00).  Please try again")
+                    continue
+            except ValueError:                    
+                print("Value must be a non-negative float (e.g 100.00).  Please try again")
+                continue
+        elif parm_type == 'non_negative_int':
+            try:
+                typed_value = int(s)
+                if typed_value < 0:
+                    print("Value must be a non-negative integer. Please try again")
+                    continue
+            except ValueError:
+                print("Value must be a non-negative integer.  Please try again")
+                continue
+        else:
+            typed_value = s
+
+        return typed_value
+
+def collect_metadata_kwargs(metadata_parameters):
+    return {parm: get_parameter_of_type(text, parm_type) for parm, text, parm_type in metadata_parameters}
+    
 class Bank():
     '''
     Controls flow using Customer and Account objects.  Talks to user dialog  Handles errors.  Performs security check
@@ -38,9 +67,6 @@ class Bank():
     customers = {}
     accounts = {}
 
-    class AccountValidationException(Exception):
-        pass
-
     class InvalidCredentialsException(Exception):
         pass
 
@@ -50,7 +76,7 @@ class Bank():
     def persist(self):
         pass
 
-    def get_activity_from_main_menu(self):
+    def menu_get_main_activity(self):
         '''
         Collect user's selection from main menu.
         ''' 
@@ -62,7 +88,7 @@ class Bank():
 
         return select_from_menu(header, question, options)
 
-    def get_yes_no_existing_customer(self):
+    def menu_get_existing_customer_yes_no(self):
         '''
         Collect user's selection: Existing Customer Yes/No 
         ''' 
@@ -73,18 +99,17 @@ class Bank():
         
         return select_from_menu(header, question, options)
 
-    def get_new_account_type(self):
+    def menu_get_new_account_type(self):
         '''
         Collect user's selection from account type menu.
         ''' 
-        header = ""
         question = "Which type of account would you like to open?"
-        options = (("Checking Account", Account.CHECKING),
-                   ("Savings Account", Account.SAVINGS))
+        options = (("Checking Account", CheckingAccount),
+                   ("Savings Account", SavingsAccount))
 
-        return select_from_menu(header, question, options)
+        return select_from_menu("", question, options)
 
-    def get_transaction_method(self,transaction_metadata):
+    def menu_get_available_transactions(self,transaction_metadata):
         '''
         Collect user's selection from available transactions menu
         '''
@@ -101,13 +126,9 @@ class Bank():
         or there are validation errors.
         '''
         customer = Customer()
-
-        print("")
-        print("OK.  Let's sign you up with the following information\n")
-
         info_metadata = customer.get_info_metadata()
         info_metadata_parameters = info_metadata['set_info'][1]
-        kwargs = {parm: input(text) for parm, text in info_metadata_parameters}
+        kwargs = collect_metadata_kwargs(info_metadata_parameters)
         customer.set_info(**kwargs)
 
         if customer in self.customers.values():    # customer equality based on first_name, last_name ssn
@@ -125,7 +146,7 @@ class Bank():
         '''
         Returns customer or raises exception
         '''
-        option = self.get_yes_no_existing_customer()
+        option = self.menu_get_existing_customer_yes_no()
         if option == Bank.YES:
             print("")
             customer_id = input("Please enter your customer id: ").strip()
@@ -135,6 +156,7 @@ class Bank():
                 raise self.InvalidCredentialsException
             return customer
         elif option == Bank.NO:
+            print("\nOK.  Let's sign you up with the following information\n")
             return self.get_new_customer()
         else:
             raise self.BankSystemError("get_validated_customer: Received answer other than Yes/No")
@@ -142,19 +164,17 @@ class Bank():
     def get_new_account(self):
 
         customer = self.get_validated_customer()
-        type = self.get_new_account_type()
-        if type == Account.CHECKING:
-            account = CheckingAccount(customer.id)
-        if type == Account.SAVINGS:
-            account = SavingsAccount(customer.id)
+        account_type = self.menu_get_new_account_type()
+        account = account_type(customer_id = customer.id)
+        
         open_metadata = account.get_open_metadata()
         open_metadata_parameters = open_metadata['open'][1]
-        kwargs = {parm: input(text) for parm, text in open_metadata_parameters}
+        kwargs = collect_metadata_kwargs(open_metadata_parameters)
         account.open(**kwargs)
 
         self.accounts[account.id] = account
         customer.add_account(account.id)
-        self.persist()
+        
         input(
             "Congratulations! You're account {0} has been opened. " 
             "Remember this account number for future transactions.\n"
@@ -178,21 +198,21 @@ class Bank():
 
         account = self.get_validated_account()
         customer = self.customers[account.customer_id]
+
         print("Hi, {0}. Welcome Back!".format(customer.first_name))
+
         transaction_metadata = account.get_transaction_metadata()
-        transaction_method = self.get_transaction_method(
-            transaction_metadata)  # pick desired function from menu
+        transaction_method = self.menu_get_available_transactions(transaction_metadata)  # pick desired function from menu
         transaction_parameters = transaction_metadata[transaction_method][1]
-        kwargs = {parm: input(text) for parm, text in transaction_parameters}
-        getattr(account, transaction_method)(
-            **kwargs)                           # call method
+        kwargs = collect_metadata_kwargs(transaction_parameters)
+        getattr(account, transaction_method)(**kwargs)                                   # call method
 
         input("Congratulations. Transaction completed successfully.  Please hit return to continue")
 
     def run(self):
         while True:
             try:
-                activity = self.get_activity_from_main_menu()
+                activity = self.menu_get_main_activity()
                 if activity == Bank.RUN_TRANSACTION:
                     self.run_transaction()
                 elif activity == Bank.OPEN_NEW_ACCOUNT:
