@@ -41,24 +41,13 @@ def test_open_with_customer_id():
 def test_withdrawal():
 
     s1 = SavingsAccount()
-    s1.open(opening_balance=50)
-    s1.withdraw(withdrawal_amount=20)
-    assert s1._balance == 30
-    s1.withdraw(withdrawal_amount=20)
-    assert s1._balance == 10
+    s1.open(opening_balance=50.)
+    s1.withdraw(withdrawal_amount=20.)
+    assert s1._balance == 30.
+    s1.withdraw(withdrawal_amount=20.)
+    assert s1._balance == 10.
     with pytest.raises(TransactionFailedException):
-        s1.withdraw(withdrawal_amount=20)
-    assert s1._balance == 10
+        s1.withdraw(withdrawal_amount=20.)
+    assert s1._balance == 10.
 
-def test_withdrawal_string_input():
-    
-    s1 = SavingsAccount()
-    s1.open(opening_balance='50')
-    s1.withdraw(withdrawal_amount='20')
-    assert s1._balance == 30
-    s1.withdraw(withdrawal_amount='20')
-    assert s1._balance == 10
-    with pytest.raises(TransactionFailedException):
-        s1.withdraw(withdrawal_amount='20')
-    assert s1._balance == 10
     
