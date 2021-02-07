@@ -40,7 +40,7 @@ class SavingsAccount(Account):
     SAVINGS_ID_PREFIX = "SAV"
     next_savings_account_id = 1
 
-    withdraw_metadata = {'withdraw' : ('Withdraw from account', [('withdrawal_amount', 'Please enter amount to withdraw: ','non_negative_float')])}
+    savings_withdraw_metadata = {'withdraw' : ('Withdraw from account', [('withdrawal_amount', 'Please enter amount to withdraw: ','non_negative_float')])}
     
     def __init__(self, customer_id=None):  
         super().__init__(customer_id)
@@ -53,8 +53,8 @@ class SavingsAccount(Account):
         self._balance -= withdrawal_amount
 
     def get_transaction_metadata(self): 
-        d = super().get_transaction_metadata()
-        d.update(SavingsAccount.withdraw_metadata)
+        d = super().get_transaction_metadata().copy()
+        d.update(SavingsAccount.savings_withdraw_metadata)
         return d
     
 class CheckingAccount(Account):
@@ -62,11 +62,11 @@ class CheckingAccount(Account):
     CHECKING_ID_PREFIX = "CHK"
     next_checking_account_id = 1
 
-    open_metadata = {'open': ('No Display',[('opening_balance', 'Please enter a starting balance: ', 'non_negative_float'),
+    checking_open_metadata = {'open': ('No Display',[('opening_balance', 'Please enter a starting balance: ', 'non_negative_float'),
                                             ('number_starter_checks','Please enter your initial number of checks (default is 10): ', 'non_negative_int' )])}
-    order_checks_metadata = {'order_checks' : ('Order replacement checks ($5 per 50 checks will be deducted from balance) ',
+    checking_order_checks_metadata = {'order_checks' : ('Order replacement checks ($5 per 50 checks will be deducted from balance) ',
                             [('number_of_checks', 'Please enter number of new checks: ', 'non_negative_int')])}
-    write_check_metadata = {'write_check' : ('Write a check',
+    checking_write_check_metadata = {'write_check' : ('Write a check',
                             [('check_amount', 'Please enter the check amount: ', 'non_negative_float')])}
 
     def __init__(self, customer_id=None): 
@@ -99,13 +99,13 @@ class CheckingAccount(Account):
         return super().status() + '\n' + f'You have {self._remaining_checks} checks remaining'
         
     def get_open_metadata(self):
-        d = super().get_open_metadata()
-        d.update(CheckingAccount.open_metadata)
+        d = super().get_open_metadata().copy()
+        d.update(CheckingAccount.checking_open_metadata)
         return d
 
     def get_transaction_metadata(self):  
-        d = super().get_transaction_metadata()
-        d.update(CheckingAccount.write_check_metadata)
-        d.update(CheckingAccount.order_checks_metadata)
+        d = super().get_transaction_metadata().copy()
+        d.update(CheckingAccount.checking_write_check_metadata)
+        d.update(CheckingAccount.checking_order_checks_metadata)
         return d
     
