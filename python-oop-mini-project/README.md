@@ -17,7 +17,7 @@
 
 ### Account status information is displayed after each transaction completes.
 
-## To run project, enter python bank.py from the command line.
+## To run project, enter _python bank.py_ from the command line.
 
 
 
