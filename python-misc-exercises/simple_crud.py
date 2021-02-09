@@ -23,7 +23,7 @@ results2 = conn.execute("SELECT artist, title FROM album").fetchall()
 for result in results2:
     print(result['artist'], result['title'])
 
-print(results == results2)
+assert(results == results2)
 
 employees = Table('employees', meta,
     Column('id', Integer()),
