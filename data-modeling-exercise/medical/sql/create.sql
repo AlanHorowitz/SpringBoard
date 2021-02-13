@@ -1,6 +1,9 @@
 CREATE DATABASE IF NOT EXISTS medical DEFAULT CHARSET = utf8mb4;
 USE medical;
 
+DROP TABLE IF EXISTS DiagnosisEvent;
+DROP TABLE IF EXISTS Diagnosis;
+DROP TABLE IF EXISTS Encounter;
 DROP TABLE IF EXISTS Encounter;
 DROP TABLE IF EXISTS Facility;
 DROP TABLE IF EXISTS Patient;
@@ -25,6 +28,7 @@ CREATE TABLE Patient (
   patient_name varchar(255) DEFAULT NULL,
   patient_address varchar(255) DEFAULT NULL,
   social_security_number varchar(255) DEFAULT NULL,
+  date_of_birth date,
   telephone_number varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -47,6 +51,21 @@ CREATE TABLE Encounter (
     REFERENCES Provider(provider_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE Diagnosis (
+  diagnosis_code varchar(20) NOT NULL PRIMARY KEY,
+  description varchar(255)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
+CREATE TABLE DiagnosisEvent (
+  encounter_id int NOT NULL,
+  diagnosis_code varchar(20) NOT NULL,
+  notes varchar(255),
+  PRIMARY KEY (encounter_id, diagnosis_code),
+  CONSTRAINT fk_encounter_id
+    FOREIGN KEY (encounter_id) 
+	REFERENCES Encounter(encounter_id),
+  CONSTRAINT fk_diagnosis_code
+    FOREIGN KEY (diagnosis_code) 
+	REFERENCES Diagnosis(diagnosis_code)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
