@@ -4,6 +4,8 @@
 
 ### The bank is modeled by three classes:  Bank, Customer and Account.  A Bank may have one or many Customers and a Customer may have one or many Accounts.   The Accounts that a Customer may open are CheckingAccount and SavingsAccount, which are subclasses of Account.  To open an account, you must first register as a customer and select a personal identification number (PIN).  You will be issued customer and account ids for future use.
 
+### Please see class diagram at uml.jpg
+
 ### The type of transactions supported by the accounts are:
 
 ### SavingAccount
