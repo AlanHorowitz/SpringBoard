@@ -17,12 +17,12 @@
 
 ### Account status information is displayed after each transaction completes.
 
-## This project requires Python 3 and is launched using the following command in this directory
+### This project requires Python 3 and is launched using the following command in this directory
 
 ```
 python -m simplefriendlybank
 ```
-Expected output
+### which displays the welcome menu
 ```
 -----------------------------------------
      Welcome to Simple Friendly Bank     
