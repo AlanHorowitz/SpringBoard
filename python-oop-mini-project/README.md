@@ -1,4 +1,4 @@
-## Banking System Case Study
+## simplefriendlybank 
 
 ### This project simulates transactions with Simple Friendly Bank via a menu driven user interface.
 
@@ -17,7 +17,22 @@
 
 ### Account status information is displayed after each transaction completes.
 
-## To run project, enter _python bank.py_ from the command line.
+## This project requires Python 3 and is launched using the following command in this directory
 
+```
+python -m simplefriendlybank
+```
+Expected output
+```
+-----------------------------------------
+     Welcome to Simple Friendly Bank     
+-----------------------------------------
 
+What would you like to do?
 
+[1] Open a new account
+[2] Access an existing account
+[3] Quit
+
+Please select an option from the menu:
+```
