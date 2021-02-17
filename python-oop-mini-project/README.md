@@ -36,3 +36,4 @@ What would you like to do?
 
 Please select an option from the menu:
 ```
+### Open an account and happy banking!
