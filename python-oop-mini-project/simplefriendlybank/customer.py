@@ -1,7 +1,8 @@
 class CustomerAlreadyExistsException(Exception):
     pass
 
-class Customer():
+
+class Customer:
 
     CUSTOMER_ID_PREFIX = "CUST"
     next_customer_id = 1
@@ -17,33 +18,48 @@ class Customer():
         self._street_address = ""
         self._state = ""
         self._zip_code = ""
-        self._pin = "" 
+        self._pin = ""
 
         Customer.next_customer_id += 1
 
     def get_info_metadata(self):
 
-        return {'set_info': ('No Display',[('first_name', 'Please enter your first name: ', 'string'),
-                                             ('last_name', 'Please enter your last name: ', 'string'),
-                                             ('social_security_number', 'Please enter your social security number: ', 'string'),   
-                                            ('pin','Please enter your personal identification number: ', 'string' )])}
-        
+        return {
+            "set_info": (
+                "No Display",
+                [
+                    ("first_name", "Please enter your first name: ", "string"),
+                    ("last_name", "Please enter your last name: ", "string"),
+                    (
+                        "social_security_number",
+                        "Please enter your social security number: ",
+                        "string",
+                    ),
+                    (
+                        "pin",
+                        "Please enter your personal identification number: ",
+                        "string",
+                    ),
+                ],
+            )
+        }
+
     def set_info(self, **kwargs):
 
-        self._first_name = kwargs.get('first_name')
-        self._last_name = kwargs.get('last_name')
-        self._social_security_number = kwargs.get('social_security_number')
-        self._pin = kwargs.get('pin')
+        self._first_name = kwargs.get("first_name")
+        self._last_name = kwargs.get("last_name")
+        self._social_security_number = kwargs.get("social_security_number")
+        self._pin = kwargs.get("pin")
 
     @property
-    def id(self):   
+    def id(self):
         return self._id
 
-    @property 
+    @property
     def first_name(self):
         return self._first_name
 
-    @property 
+    @property
     def last_name(self):
         return self._last_name
 
@@ -60,8 +76,10 @@ class Customer():
 
     def __eq__(self, other):
         if isinstance(other, Customer):
-            if ((self.first_name == other.first_name) and 
-                (self.last_name == other.last_name) and 
-                (self.social_security_number == other.social_security_number)):
-                    return True
-        return False            
+            if (
+                (self.first_name == other.first_name)
+                and (self.last_name == other.last_name)
+                and (self.social_security_number == other.social_security_number)
+            ):
+                return True
+        return False
