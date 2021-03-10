@@ -1,5 +1,5 @@
 FROM python:3.8-slim
-RUN pip install psycopg2-binary
+RUN pip install psycopg2-binary==2.8.6
 
 COPY second_etl.py .
 

@@ -108,16 +108,12 @@ def create_table_src(conn, create_sql):
 def create_table_trg(conn, table):
     pass
 
-
 def extract_src_to_trg(source, target, table):
-    '''
-        moving in the right order, upsert to target system for each table
-    '''
     pass
 
 def incremental_load_src(src_conn, table, n_inserts, n_updates):
     '''
-    Insert n records of dummy data into table
+    Insert or update records of dummy data  
     '''  
     global total_inserts
     global total_updates
@@ -192,7 +188,7 @@ for i in range(5):
     incremental_load_src(src_conn, PRODUCT_TABLE, n_inserts=200, n_updates=50)
     extract_src_to_trg(src_conn, trg_conn, PRODUCT_TABLE)
 
-print(f"{total_inserts} inserts and {total_updates} processed.")
+print(f"{total_inserts} inserts and {total_updates} updates processed.")
 
 src_conn.close()
 # trg_conn.close()

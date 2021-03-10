@@ -70,7 +70,6 @@ def extract_source_system_to_csv(engine, table, directory):
 
     # copy file to etl input directory
     shutil.copy('pgsql_tmp/postgres_out/first_etl.csv', directory)
-    shutil.move
 
 def transform_load_from_csv(engine, table, directory):
     
