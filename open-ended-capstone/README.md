@@ -18,7 +18,8 @@ docker run second_etl
 ### To inspect the product table from the Postgres CLI:
 ```
 docker run --rm -it postgres psql -h 172.17.0.1 -U postgres
-```
-### Enter postgres as password
+
+Enter postgres as password
+``` 
 
 #### Note: This program depends on the docker host being at address 172.17.0.1
