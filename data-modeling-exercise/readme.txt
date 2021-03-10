@@ -1,0 +1,1 @@
+This folder contains work for Springboard Data Modeling Exercise -- Unit 7.2 part 6
