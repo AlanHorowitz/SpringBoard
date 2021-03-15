@@ -2,9 +2,6 @@ import random
 import psycopg2
 import psycopg2.extras
 
-total_inserts = 0
-total_updates = 0
-
 class Column():
 
     def __init__(self, column_name, column_type, isPrimaryKey=False):
@@ -115,8 +112,8 @@ def incremental_load_src(src_conn, table, n_inserts, n_updates):
     '''
     Insert or update records of dummy data  
     '''  
-    global total_inserts
-    global total_updates
+    
+    print("I am here")
 
     primary_key_column = table.get_primary_key()
     
@@ -164,31 +161,30 @@ def incremental_load_src(src_conn, table, n_inserts, n_updates):
    
         src_conn.commit()
 
-        total_inserts += n_inserts
-        total_updates += n_updates
-
+        return n_inserts, n_updates
+        
 # etl_project load initial --inserts i
 # etl_project load incremental --inserts i --updates j --iterations k 
 
-src_conn = psycopg2.connect("dbname=postgres host=172.17.0.1 user=postgres password=postgres")
-trg_conn = None
+def demo1():
 
-total_inserts = 0
-total_updates = 0
+    src_conn = psycopg2.connect("dbname=postgres host=172.17.0.1 user=postgres password=postgres")
 
-create_table_src(src_conn, PRODUCT_CREATE_SQL_PG)
-create_table_trg(trg_conn, None)
+    total_inserts = 0
+    total_updates = 0   
 
-incremental_load_src(src_conn, PRODUCT_TABLE, n_inserts=5000, n_updates=0)
-extract_src_to_trg(src_conn, trg_conn, PRODUCT_TABLE)   # table for now, generalize to 
-                                                        # System of tables.
- 
-for i in range(5):
+    create_table_src(src_conn, PRODUCT_CREATE_SQL_PG)
 
-    incremental_load_src(src_conn, PRODUCT_TABLE, n_inserts=200, n_updates=50)
-    extract_src_to_trg(src_conn, trg_conn, PRODUCT_TABLE)
+    i, u = incremental_load_src(src_conn, PRODUCT_TABLE, n_inserts=5000, n_updates=0)
+    total_inserts += i
+    total_updates += u
+        
+    for _ in range(5):
+        i, u = incremental_load_src(src_conn, PRODUCT_TABLE, n_inserts=200, n_updates=50)
+        total_inserts += i
+        total_updates += u
+   
+    print(f"{total_inserts} inserts and {total_updates} updates processed.")
 
-print(f"{total_inserts} inserts and {total_updates} updates processed.")
-
-src_conn.close()
-# trg_conn.close()
+    src_conn.close()
+    # trg_conn.close()
