@@ -1,11 +1,16 @@
-# test arguments from command line
 import sys
-import RetailDW.demo1 as demo1
+from RetailDW.demo import demo1
 
-if __name__ == '__main__':
+demos_available = {'demo1' : (demo1, "Initial and incremental load of source system"),}
 
-    print(f"Arguments count: {len(sys.argv)}")
-    for i, arg in enumerate(sys.argv):
-        print(f"Argument {i:>6}: {arg}")
-
-    demo1.run()
+if len(sys.argv) > 1:
+    arg1 = sys.argv[1]
+    if arg1 in demos_available:
+        demo = demos_available[arg1][0]
+        demo()
+    else:
+        print(f"{arg1} not found\n")
+else:
+    print("Usage RetailDW [demo name]")
+    print("Available demo(s) are:")
+    print(*demos_available.keys())
