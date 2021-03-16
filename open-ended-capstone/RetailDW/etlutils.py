@@ -6,13 +6,15 @@ from psycopg2.extensions import connection, cursor
 
 from RetailDW.sqltypes import Table, Column
 
-DEFAULT_INSERT_VALUES : Dict[str,object] = {'INTEGER': 98,
-                         'VARCHAR': 'AAA',
-                         'FLOAT': 5.0,
-                         'REAL': 5.0,
-                         'DATE': '2021-02-11 12:52:47',
-                         'TINYINT': 0,
-                         'BOOLEAN': True}
+DEFAULT_INSERT_VALUES: Dict[str, object] = {
+    "INTEGER": 98,
+    "VARCHAR": "AAA",
+    "FLOAT": 5.0,
+    "REAL": 5.0,
+    "DATE": "2021-02-11 12:52:47",
+    "TINYINT": 0,
+    "BOOLEAN": True,
+}
 
 
 def create_table(conn: connection, create_sql: str) -> None:
@@ -23,8 +25,9 @@ def create_table(conn: connection, create_sql: str) -> None:
     cur.close()
 
 
-def incremental_load(conn: connection, table: Table,
-                     n_inserts: int, n_updates: int) -> Tuple[int, int]:
+def incremental_load(
+    conn: connection, table: Table, n_inserts: int, n_updates: int
+) -> Tuple[int, int]:
     """
     Insert and update the given numbers of sythesized records to a table.
 
@@ -55,15 +58,18 @@ def incremental_load(conn: connection, table: Table,
     next_key = 1 if result[0] == None else result[0] + 1
     row_count = next_key - 1
 
-    column_names = ','.join(table.get_column_names())  # for SELECT statements
+    column_names = ",".join(table.get_column_names())  # for SELECT statements
 
     if n_updates > 0:
 
         n_updates = min(n_updates, row_count)
-        update_keys = ','.join(
-            [str(i) for i in random.sample(range(1, next_key), n_updates)])
-        cur.execute(f"SELECT {column_names} from {table.get_name()}"
-                    f" WHERE {table.get_primary_key()} IN ({update_keys});")
+        update_keys = ",".join(
+            [str(i) for i in random.sample(range(1, next_key), n_updates)]
+        )
+        cur.execute(
+            f"SELECT {column_names} from {table.get_name()}"
+            f" WHERE {table.get_primary_key()} IN ({update_keys});"
+        )
 
         result = cur.fetchall()
 
@@ -71,28 +77,34 @@ def incremental_load(conn: connection, table: Table,
             key_value = r[primary_key_column]
             update_column_name = table.get_update_column().get_name()
             update_column_value = r[update_column_name]
-            cur.execute(f"UPDATE {table.get_name()}"
-                        f" SET {update_column_name} = concat('{update_column_value}', '_UPD')"
-                        f" WHERE {primary_key_column} = {key_value}")
+            cur.execute(
+                f"UPDATE {table.get_name()}"
+                f" SET {update_column_name} = concat('{update_column_value}', '_UPD')"
+                f" WHERE {primary_key_column} = {key_value}"
+            )
 
     if n_inserts > 0:
 
         insert_records = []
         for pk in range(next_key, next_key + n_inserts):
 
-            d : List[object] = []
+            d: List[object] = []
             for col in table.get_columns():
                 if col.isPrimaryKey():
                     d.append(pk)
                 else:
                     d.append(DEFAULT_INSERT_VALUES[col.get_type()])
-                
+
             insert_records.append(tuple(d))
 
-        values_substitutions = ','.join(['%s'] * n_inserts)  # each %s holds one tuple row
+        values_substitutions = ",".join(
+            ["%s"] * n_inserts
+        )  # each %s holds one tuple row
 
         cur.execute(
-            f"INSERT INTO product ({column_names}) values {values_substitutions}", insert_records)
+            f"INSERT INTO product ({column_names}) values {values_substitutions}",
+            insert_records,
+        )
 
         conn.commit()
 

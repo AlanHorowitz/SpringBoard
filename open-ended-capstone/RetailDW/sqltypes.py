@@ -1,10 +1,11 @@
 import random
 from typing import List
 
-class Column():
+
+class Column:
     """Database Column metadata"""
 
-    def __init__(self, column_name : str, column_type : str, isPrimaryKey : bool=False):
+    def __init__(self, column_name: str, column_type: str, isPrimaryKey: bool = False):
 
         self._name = column_name
         self._type = column_type
@@ -22,10 +23,11 @@ class Column():
 
         return self._isPrimaryKey
 
-class Table():
+
+class Table:
     """Database Table metadata"""
 
-    def __init__(self, name : str, *columns : Column):
+    def __init__(self, name: str, *columns: Column):
         """Instatiate a table metadata object.
 
         Note: Source system tables in RetailDW must have a single column integer primary key
@@ -33,12 +35,14 @@ class Table():
         """
 
         self._name = name
-        self._columns = [ col for col in columns ] 
-        primary_keys = [ col.get_name() for col in columns if col.isPrimaryKey() ] 
+        self._columns = [col for col in columns]
+        primary_keys = [col.get_name() for col in columns if col.isPrimaryKey()]
         if len(primary_keys) != 1:
             raise Exception("Simulator requires exactly one primary key")
         self._primary_key = primary_keys[0]
-        self._update_columns = [col for col in columns if col.get_type() == 'VARCHAR']  # restrict to VARCHAR update
+        self._update_columns = [
+            col for col in columns if col.get_type() == "VARCHAR"
+        ]  # restrict to VARCHAR update
         if len(primary_keys) == 0:
             raise Exception("Need at least one VARCHAR for update")
 
@@ -57,10 +61,9 @@ class Table():
 
     def get_column_names(self) -> List[str]:
         """ Return a complete list of Column names for the table."""
-        return [col.get_name() for col in self._columns] 
+        return [col.get_name() for col in self._columns]
 
     def get_update_column(self) -> Column:
         """ Return a random eligible update column."""
-        i = random.randint(0,len(self._update_columns)-1)   
+        i = random.randint(0, len(self._update_columns) - 1)
         return self._update_columns[i]
-
