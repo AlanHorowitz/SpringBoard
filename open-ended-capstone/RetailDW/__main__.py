@@ -1,7 +1,7 @@
 import sys
 from RetailDW.demo import demo1
 
-demos_available = {'demo1' : (demo1, "Initial and incremental load of source system"),}
+demos_available = {'demo1' : (demo1, "Initial and incremental load of source system")}
 
 if len(sys.argv) > 1:
     arg1 = sys.argv[1]
