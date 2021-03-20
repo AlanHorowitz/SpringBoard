@@ -1,5 +1,6 @@
 import random
 from typing import Tuple, Dict, List
+from datetime import datetime
 
 from psycopg2.extras import DictCursor, DictRow
 from psycopg2.extensions import connection, cursor
@@ -26,7 +27,11 @@ def create_table(conn: connection, create_sql: str) -> None:
 
 
 def incremental_load(
-    conn: connection, table: Table, n_inserts: int, n_updates: int
+    conn: connection,
+    table: Table,
+    n_inserts: int,
+    n_updates: int,
+    timestamp: datetime = datetime.now(),
 ) -> Tuple[int, int]:
     """
     Insert and update the given numbers of sythesized records to a table.
@@ -49,16 +54,17 @@ def incremental_load(
         In the future these may differ from the input values.
     """
 
+    table_name = table.get_name()
     primary_key_column = table.get_primary_key()
+    updated_at_column = table.get_updated_at()
+    column_names = ",".join(table.get_column_names())  # for SELECT statements
 
     cur: cursor = conn.cursor(cursor_factory=DictCursor)
 
-    cur.execute(f"SELECT MAX({primary_key_column}) from {table.get_name()};")
+    cur.execute(f"SELECT COUNT(*), MAX({primary_key_column}) from {table_name};")
     result: DictRow = cur.fetchone()
-    next_key = 1 if result[0] == None else result[0] + 1
-    row_count = next_key - 1
-
-    column_names = ",".join(table.get_column_names())  # for SELECT statements
+    row_count = result[0]
+    next_key = 1 if result[1] == None else result[1] + 1
 
     if n_updates > 0:
 
@@ -67,20 +73,22 @@ def incremental_load(
             [str(i) for i in random.sample(range(1, next_key), n_updates)]
         )
         cur.execute(
-            f"SELECT {column_names} from {table.get_name()}"
-            f" WHERE {table.get_primary_key()} IN ({update_keys});"
+            f"SELECT {column_names} from {table_name}"
+            f" WHERE {primary_key_column} IN ({update_keys});"
         )
 
         result = cur.fetchall()
 
         for r in result:
             key_value = r[primary_key_column]
-            update_column_name = table.get_update_column().get_name()
-            update_column_value = r[update_column_name]
+            update_column = table.get_update_column().get_name()
+            update_column_value = r[update_column]
             cur.execute(
-                f"UPDATE {table.get_name()}"
-                f" SET {update_column_name} = concat('{update_column_value}', '_UPD')"
-                f" WHERE {primary_key_column} = {key_value}"
+                f"UPDATE {table_name}"
+                f" SET {update_column} = concat('{update_column_value}', '_UPD'),"
+                f" {updated_at_column} = %s"
+                f" WHERE {primary_key_column} = {key_value}",
+                [timestamp],
             )
 
     if n_inserts > 0:
@@ -92,6 +100,8 @@ def incremental_load(
             for col in table.get_columns():
                 if col.isPrimaryKey():
                     d.append(pk)
+                elif col.isInsertedAt() or col.isUpdatedAt():
+                    d.append(timestamp)
                 else:
                     d.append(DEFAULT_INSERT_VALUES[col.get_type()])
 

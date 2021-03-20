@@ -14,6 +14,8 @@ product_dimension_height FLOAT(11) NULL DEFAULT NULL,
 product_introduced_date DATE NULL DEFAULT NULL,
 product_discontinued BOOLEAN NULL DEFAULT FALSE,
 product_no_longer_offered BOOLEAN NULL DEFAULT FALSE,
+product_inserted_at TIMESTAMP NOT NULL,
+product_updated_at TIMESTAMP NOT NULL,
 PRIMARY KEY (product_id));
 """
 
@@ -31,4 +33,6 @@ PRODUCT_TABLE = Table(
     Column("product_introduced_date", "DATE"),
     Column("product_discontinued", "BOOLEAN"),
     Column("product_no_longer_offered", "BOOLEAN"),
+    Column("product_inserted_at", "TIMESTAMP", isInsertedAt=True),
+    Column("product_updated_at", "TIMESTAMP", isUpdatedAt=True),
 )
