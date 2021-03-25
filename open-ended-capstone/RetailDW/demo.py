@@ -50,11 +50,15 @@ def demo2() -> None:
         "dbname=postgres host=172.17.0.1 user=postgres password=postgres"
     )
 
-    total_inserts = 0
-    total_updates = 0
+    total_inserts_source = 0
+    total_updates_source = 0
+    total_inserts_target = 0
+    total_updates_target = 0
     timestamp = datetime(2021, 1, 11, 12, 0, 0)
 
     create_table(source_connection, PRODUCT_CREATE_SQL_PG)
+    create_table(target_connection, PRODUCT_CREATE_SQL_MYSQL)
+    create_table(target_connection, ETL_HISTORY)
 
     inserted, updated = incremental_load(
         source_connection,
@@ -63,22 +67,40 @@ def demo2() -> None:
         n_updates=0,
         timestamp=timestamp,
     )
-    total_inserts += inserted
-    total_updates += updated
-    timestamp += timedelta(days=1)
 
+    print(f"{inserted} inserts processed. Initial load {timestamp}")
+
+    total_inserts_source += inserted
+    total_updates_source += updated
+    timestamp += timedelta(days=1)
+    
     for _ in range(5):
         inserted, updated = incremental_load(
             source_connection,
             PRODUCT_TABLE,
             n_inserts=200,
             n_updates=50,
-            timestamp=timestamp,
+            timestamp=timestamp
         )
-        total_inserts += inserted
-        total_updates += updated
+
+        print(f"{inserted} inserts and {updated} processed. Incremental load {timestamp}")
+
+        total_inserts_source += inserted
+        total_updates_source += updated
+        
+        inserted, updated, from_time, to_time = extract_to_target(
+            source_connection,
+            target_connection,
+            PRODUCT_TABLE            
+        )
+
+        print(f"{inserted} inserts and {updated} extracted to target. From: {from_time} To: {to_time} ")
+
+        total_inserts_target += inserted
+        total_updates_target += updated
         timestamp += timedelta(days=1)
 
-    print(f"{total_inserts} inserts and {total_updates} updates processed.")
+    print(f"{total_inserts_source} inserts and {total_updates_source} updates loaded to source system.")
+    print(f"{total_inserts_target} inserts and {total_updates_target} updates extracted to target system.")
 
     source_connection.close()
