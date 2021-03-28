@@ -119,3 +119,55 @@ def incremental_load(
         conn.commit()
 
     return n_inserts, n_updates
+
+def extract_to_target(src_conn: connection, trg_conn: connection, table: Table):
+    """
+    Extract records more recent than prior update from source system and UPSERT to target system.
+
+    Returns:
+        A tuple, (n_inserted,  # records inserted
+                  n_updated,   # records updated
+                  from_time,   # timestamp < source record update time 
+                  to_time      # timestamp >= source record update time  
+    """
+
+    # read source
+    # write target
+
+    n_inserts = 0
+    n_updates = 0
+
+    table_name = table.get_name()
+    column_names = ",".join(table.get_column_names())  # for SELECT statements
+    values_substitutions = ",".join(["%s"] * len(table.get_column_names())) # each %s holds one tuple row
+
+    src_cursor: cursor = src_conn.cursor(name='pgread')
+    src_cursor.arraysize = 1000
+    trg_cursor = trg_conn.cursor()
+
+    trg_cursor.execute("SELECT MAX(to_date) FROM etl_history;")
+    r = trg_cursor.fetchone()
+    from_time = r[0]
+
+    if from_time == None:
+        src_cursor.execute(f"SELECT {column_names} from {table_name};")
+    else:
+        src_cursor.execute(f"SELECT {column_names} from {table_name};"
+                            f"WHERE {table.get_updated_at} > %s", from_time)
+    while True:
+
+        r = src_cursor.fetchmany()
+        if len(r) == 0:
+            break
+
+        trg_cursor.executemany(f"REPLACE INTO Product ({column_names}) values ({values_substitutions})",r)
+
+        n_inserts += 2*len(r) - trg_cursor.rowcount
+        n_updates += trg_cursor.rowcount - len(r)    
+
+    # Populate row of ETL_history        
+
+    src_conn.commit()
+    trg_conn.commit()
+
+    return (n_inserts, n_updates, 0, 0)

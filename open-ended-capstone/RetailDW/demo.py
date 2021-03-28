@@ -3,9 +3,11 @@ from datetime import datetime, timedelta
 import psycopg2
 from psycopg2.extensions import connection
 
-from RetailDW.etlutils import create_table, incremental_load
-from RetailDW.product import PRODUCT_TABLE, PRODUCT_CREATE_SQL_PG
+import mysql.connector 
+from mysql.connector import connect
 
+from RetailDW.etlutils import create_table, incremental_load, extract_to_target
+from RetailDW.product import PRODUCT_TABLE, PRODUCT_CREATE_SQL_PG, PRODUCT_CREATE_SQL_MYSQL
 
 def demo1() -> None:
     """Initial and incremental load into product table.
@@ -50,15 +52,22 @@ def demo2() -> None:
         "dbname=postgres host=172.17.0.1 user=postgres password=postgres"
     )
 
+    target_connection = connect(host='localhost',
+                             user='admin',
+                             password='admin',
+                             database='retaildw',
+                             charset='utf8')
+    
     total_inserts_source = 0
     total_updates_source = 0
     total_inserts_target = 0
     total_updates_target = 0
+
     timestamp = datetime(2021, 1, 11, 12, 0, 0)
 
     create_table(source_connection, PRODUCT_CREATE_SQL_PG)
     create_table(target_connection, PRODUCT_CREATE_SQL_MYSQL)
-    create_table(target_connection, ETL_HISTORY)
+    # create_table(target_connection, ETL_HISTORY)
 
     inserted, updated = incremental_load(
         source_connection,
@@ -83,7 +92,7 @@ def demo2() -> None:
             timestamp=timestamp
         )
 
-        print(f"{inserted} inserts and {updated} processed. Incremental load {timestamp}")
+        print(f"{inserted} inserts and {updated} updates loaded to source: {timestamp}.")
 
         total_inserts_source += inserted
         total_updates_source += updated
@@ -94,7 +103,7 @@ def demo2() -> None:
             PRODUCT_TABLE            
         )
 
-        print(f"{inserted} inserts and {updated} extracted to target. From: {from_time} To: {to_time} ")
+        print(f"{inserted} inserts and {updated} updates extracted to target: From: {from_time} To: {to_time} ")
 
         total_inserts_target += inserted
         total_updates_target += updated
@@ -104,3 +113,4 @@ def demo2() -> None:
     print(f"{total_inserts_target} inserts and {total_updates_target} updates extracted to target system.")
 
     source_connection.close()
+    target_connection.close()
