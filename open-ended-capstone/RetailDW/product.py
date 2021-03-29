@@ -20,7 +20,7 @@ PRIMARY KEY (product_id));
 """
 
 PRODUCT_CREATE_SQL_MYSQL = """
-CREATE TABLE IF NOT EXISTS Product (
+CREATE TABLE IF NOT EXISTS product (
 product_id INT NOT NULL,
 product_name VARCHAR(80) NOT NULL,
 product_description VARCHAR(255) NULL DEFAULT NULL,

@@ -17,6 +17,7 @@ DEFAULT_INSERT_VALUES: Dict[str, object] = {
     "BOOLEAN": True,
 }
 
+DATE_LOW = datetime(1980, 1, 1)
 
 def create_table(conn: connection, create_sql: str) -> None:
 
@@ -112,13 +113,27 @@ def incremental_load(
         )  # each %s holds one tuple row
 
         cur.execute(
-            f"INSERT INTO product ({column_names}) values {values_substitutions}",
+            f"INSERT INTO {table_name} ({column_names}) values {values_substitutions}",
             insert_records,
         )
 
         conn.commit()
 
     return n_inserts, n_updates
+
+def get_last_timestamp(trg_cursor, table_name):
+
+    trg_cursor.execute("SELECT MAX(to_timestamp) FROM etl_history WHERE table_name = %s;", (table_name,))
+    from_time = trg_cursor.fetchone()[0]
+    return from_time if from_time else DATE_LOW 
+
+def insert_etl_history(trg_cursor, table_name, n_inserts, n_updates,from_timestamp, to_timestamp):
+    
+    trg_cursor.execute("INSERT INTO etl_history "
+    "(table_name, n_inserts, n_updates,from_timestamp, to_timestamp) "
+    "VALUES (%s, %s, %s, %s, %s);", (table_name, n_inserts, n_updates,from_timestamp, to_timestamp))
+    
+    
 
 def extract_to_target(src_conn: connection, trg_conn: connection, table: Table):
     """
@@ -143,31 +158,30 @@ def extract_to_target(src_conn: connection, trg_conn: connection, table: Table):
 
     src_cursor: cursor = src_conn.cursor(name='pgread')
     src_cursor.arraysize = 1000
+
     trg_cursor = trg_conn.cursor()
+    from_timestamp = get_last_timestamp(trg_cursor, table.get_name())
+        
+    src_cursor.execute(f"SELECT {column_names} from {table_name} "
+                       f"WHERE {table.get_updated_at()} > %s;", 
+                       (from_timestamp,))
 
-    trg_cursor.execute("SELECT MAX(to_date) FROM etl_history;")
-    r = trg_cursor.fetchone()
-    from_time = r[0]
-
-    if from_time == None:
-        src_cursor.execute(f"SELECT {column_names} from {table_name};")
-    else:
-        src_cursor.execute(f"SELECT {column_names} from {table_name};"
-                            f"WHERE {table.get_updated_at} > %s", from_time)
     while True:
 
         r = src_cursor.fetchmany()
         if len(r) == 0:
             break
 
-        trg_cursor.executemany(f"REPLACE INTO Product ({column_names}) values ({values_substitutions})",r)
+        trg_cursor.executemany(f"REPLACE INTO {table_name} ({column_names}) values ({values_substitutions})",r)
 
         n_inserts += 2*len(r) - trg_cursor.rowcount
         n_updates += trg_cursor.rowcount - len(r)    
+        trg_conn.commit()
 
-    # Populate row of ETL_history        
-
-    src_conn.commit()
-    trg_conn.commit()
-
-    return (n_inserts, n_updates, 0, 0)
+    # Populate row of ETL_history   
+    
+    trg_cursor.execute(f"SELECT MAX({table.get_updated_at()}) FROM {table_name};")
+    to_timestamp = trg_cursor.fetchone()[0]
+    insert_etl_history(trg_cursor, table.get_name(), n_inserts, n_updates, from_timestamp, to_timestamp)   
+        
+    return (n_inserts, n_updates, from_timestamp, to_timestamp)
