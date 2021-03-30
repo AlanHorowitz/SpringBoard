@@ -1,13 +1,24 @@
-from datetime import datetime, timedelta
+from datetime import datetime
+from time import sleep
 
 import psycopg2
 from psycopg2.extensions import connection
 
-import mysql.connector 
+import mysql.connector
 from mysql.connector import connect
 
-from RetailDW.etlutils import create_table, incremental_load, extract_to_target
-from RetailDW.product import PRODUCT_TABLE, PRODUCT_CREATE_SQL_PG, PRODUCT_CREATE_SQL_MYSQL
+from RetailDW.etlutils import (
+    create_table,
+    load_source_table,
+    extract_table_to_target,
+    ETL_HISTORY_CREATE_MYSQL,
+)
+from RetailDW.product import (
+    PRODUCT_TABLE,
+    PRODUCT_CREATE_SQL_PG,
+    PRODUCT_CREATE_SQL_MYSQL,
+)
+
 
 def demo1() -> None:
     """Initial and incremental load into product table.
@@ -24,14 +35,14 @@ def demo1() -> None:
 
     create_table(source_connection, PRODUCT_CREATE_SQL_PG)
 
-    inserted, updated = incremental_load(
+    inserted, updated = load_source_table(
         source_connection, PRODUCT_TABLE, n_inserts=5000, n_updates=0
     )
     total_inserts += inserted
     total_updates += updated
 
     for _ in range(5):
-        inserted, updated = incremental_load(
+        inserted, updated = load_source_table(
             source_connection, PRODUCT_TABLE, n_inserts=200, n_updates=50
         )
         total_inserts += inserted
@@ -43,33 +54,37 @@ def demo1() -> None:
 
 
 def demo2() -> None:
-    """Initial and incremental load into product table.
+    """Load Product records to source system and extract to target system. 
 
-    Create the product table and load 5000 rows.  Then run a loop of 5 incremental loads, each having 200 
-    inserts and 50 updates.
+    Create the product table and load 5000 rows to the source system.  Then run a loop of 5 incremental loads, each
+    having 200 inserts and 50 updates. After each incremental load, extract records from the source system to the 
+    target system. The extract only reads data updated since the prior extract.
+    
+    Insert and update counts are printed after each operation.
     """
     source_connection: connection = psycopg2.connect(
-        "dbname=postgres host=172.17.0.1 user=postgres password=postgres"
+        dbname="postgres", host="172.17.0.1", user="postgres", password="postgres"
+    )
+    target_connection: connection = connect(
+        host="localhost",
+        user="admin",
+        password="admin",
+        database="retaildw",
+        charset="utf8",
     )
 
-    target_connection = connect(host='localhost',
-                             user='admin',
-                             password='admin',
-                             database='retaildw',
-                             charset='utf8')
-    
     total_inserts_source = 0
     total_updates_source = 0
     total_inserts_target = 0
     total_updates_target = 0
 
-    timestamp = datetime(2021, 1, 11, 12, 0, 0)
+    timestamp = datetime.now()
 
     create_table(source_connection, PRODUCT_CREATE_SQL_PG)
     create_table(target_connection, PRODUCT_CREATE_SQL_MYSQL)
-    # create_table(target_connection, ETL_HISTORY)
+    create_table(target_connection, ETL_HISTORY_CREATE_MYSQL)
 
-    inserted, updated = incremental_load(
+    inserted, updated = load_source_table(
         source_connection,
         PRODUCT_TABLE,
         n_inserts=5000,
@@ -77,40 +92,47 @@ def demo2() -> None:
         timestamp=timestamp,
     )
 
-    print(f"{inserted} inserts processed. Initial load {timestamp}")
+    print(f"{inserted} inserts and {updated} updates processed at source: {timestamp}.")
 
     total_inserts_source += inserted
     total_updates_source += updated
-    timestamp += timedelta(days=1)
-    
+
     for _ in range(5):
-        inserted, updated = incremental_load(
+
+        sleep(3)
+        timestamp = datetime.now()
+        inserted, updated = load_source_table(
             source_connection,
             PRODUCT_TABLE,
             n_inserts=200,
             n_updates=50,
-            timestamp=timestamp
+            timestamp=timestamp,
         )
 
-        print(f"{inserted} inserts and {updated} updates loaded to source: {timestamp}.")
+        print(
+            f"{inserted} inserts and {updated} updates processed at source: {timestamp}."
+        )
 
         total_inserts_source += inserted
         total_updates_source += updated
-        
-        inserted, updated, from_time, to_time = extract_to_target(
-            source_connection,
-            target_connection,
-            PRODUCT_TABLE            
+
+        inserted, updated, from_time, to_time = extract_table_to_target(
+            source_connection, target_connection, PRODUCT_TABLE
         )
 
-        print(f"{inserted} inserts and {updated} updates extracted to target: From: {from_time} To: {to_time} ")
+        print(
+            f"{inserted} inserts and {updated} updates processed at target: From: {from_time} To: {to_time} "
+        )
 
         total_inserts_target += inserted
         total_updates_target += updated
-        timestamp += timedelta(days=1)
 
-    print(f"{total_inserts_source} inserts and {total_updates_source} updates loaded to source system.")
-    print(f"{total_inserts_target} inserts and {total_updates_target} updates extracted to target system.")
+    print(
+        f"{total_inserts_source} inserts and {total_updates_source} updates processed at source."
+    )
+    print(
+        f"{total_inserts_target} inserts and {total_updates_target} updates processed at target."
+    )
 
     source_connection.close()
     target_connection.close()

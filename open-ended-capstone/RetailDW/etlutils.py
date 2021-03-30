@@ -17,7 +17,8 @@ DEFAULT_INSERT_VALUES: Dict[str, object] = {
     "BOOLEAN": True,
 }
 
-DATE_LOW = datetime(1980, 1, 1)
+DATE_LOW = datetime(1980, 1, 1)  # timestamp preceding all simulations
+
 
 def create_table(conn: connection, create_sql: str) -> None:
 
@@ -27,7 +28,7 @@ def create_table(conn: connection, create_sql: str) -> None:
     cur.close()
 
 
-def incremental_load(
+def load_source_table(
     conn: connection,
     table: Table,
     n_inserts: int,
@@ -92,6 +93,8 @@ def incremental_load(
                 [timestamp],
             )
 
+        conn.commit()
+
     if n_inserts > 0:
 
         insert_records = []
@@ -121,50 +124,92 @@ def incremental_load(
 
     return n_inserts, n_updates
 
-def get_last_timestamp(trg_cursor, table_name):
 
-    trg_cursor.execute("SELECT MAX(to_timestamp) FROM etl_history WHERE table_name = %s;", (table_name,))
-    from_time = trg_cursor.fetchone()[0]
-    return from_time if from_time else DATE_LOW 
+# ETL history table records a row for each extract.  The prior to_timestamp is used
+# to limit source system reads to unseen records.
 
-def insert_etl_history(trg_cursor, table_name, n_inserts, n_updates,from_timestamp, to_timestamp):
-    
-    trg_cursor.execute("INSERT INTO etl_history "
-    "(table_name, n_inserts, n_updates,from_timestamp, to_timestamp) "
-    "VALUES (%s, %s, %s, %s, %s);", (table_name, n_inserts, n_updates,from_timestamp, to_timestamp))
-    
-    
+ETL_HISTORY_CREATE_MYSQL = """
+CREATE TABLE IF NOT EXISTS etl_history
+( id INT NOT NULL AUTO_INCREMENT,
+  table_name VARCHAR(80),
+  from_timestamp TIMESTAMP(6), 
+  to_timestamp TIMESTAMP(6),
+  n_inserts INT,
+  n_updates INT,
+  PRIMARY KEY (id)
+);
+"""
 
-def extract_to_target(src_conn: connection, trg_conn: connection, table: Table):
+
+def etl_history_get_last_update(trg_cursor: cursor, table_name: str) -> datetime:
     """
-    Extract records more recent than prior update from source system and UPSERT to target system.
+    Return the latest updated timestamp seen for the table.
+    """
+    trg_cursor.execute(
+        "SELECT MAX(to_timestamp) FROM etl_history WHERE table_name = %s;",
+        (table_name,),
+    )
+    from_time = trg_cursor.fetchone()[0]
+    return from_time if from_time else DATE_LOW
 
+
+def etl_history_insert(
+    trg_cursor: cursor,
+    table_name: str,
+    n_inserts: int,
+    n_updates: int,
+    from_timestamp: datetime,
+    to_timestamp: datetime,
+) -> None:
+
+    trg_cursor.execute(
+        "INSERT INTO etl_history "
+        "(table_name, n_inserts, n_updates,from_timestamp, to_timestamp) "
+        "VALUES (%s, %s, %s, %s, %s);",
+        (table_name, n_inserts, n_updates, from_timestamp, to_timestamp),
+    )
+
+
+def extract_table_to_target(
+    src_conn: connection, trg_conn: connection, table: Table
+) -> Tuple[int, int, datetime, datetime]:
+    """
+    Extract records more recent than the prior update from the source system and UPSERT to the target system.
+
+    Records are read, written and commited in batches of 1000.  The upsert is performed unsing MySQL REPLACE. 
+    Insert and update counts are derived from the input record count and row return count. 
+
+    Args:
+        conn: a mysql.connector db connection.
+        table: a RetailDW.sqltypes.Table object to be loaded.
+        
     Returns:
         A tuple, (n_inserted,  # records inserted
                   n_updated,   # records updated
-                  from_time,   # timestamp < source record update time 
-                  to_time      # timestamp >= source record update time  
+                  from_time,   #   
+                  to_time      # from_time < update times of records processed <= to_time  
     """
-
-    # read source
-    # write target
+    BATCH_SIZE = 1000
 
     n_inserts = 0
     n_updates = 0
 
     table_name = table.get_name()
     column_names = ",".join(table.get_column_names())  # for SELECT statements
-    values_substitutions = ",".join(["%s"] * len(table.get_column_names())) # each %s holds one tuple row
+    values_substitutions = ",".join(["%s"] * len(table.get_column_names()))
 
-    src_cursor: cursor = src_conn.cursor(name='pgread')
-    src_cursor.arraysize = 1000
+    # use server-side cursor with batch size
+    src_cursor: cursor = src_conn.cursor(name="pgread")
+    src_cursor.arraysize = BATCH_SIZE
 
-    trg_cursor = trg_conn.cursor()
-    from_timestamp = get_last_timestamp(trg_cursor, table.get_name())
-        
-    src_cursor.execute(f"SELECT {column_names} from {table_name} "
-                       f"WHERE {table.get_updated_at()} > %s;", 
-                       (from_timestamp,))
+    trg_cursor: cursor = trg_conn.cursor()
+    from_timestamp = etl_history_get_last_update(trg_cursor, table.get_name())
+
+    src_cursor.execute(
+        f"SELECT {column_names} from {table_name} "
+        f"WHERE {table.get_updated_at()} > %s;",
+        (from_timestamp,),
+    )
 
     while True:
 
@@ -172,16 +217,23 @@ def extract_to_target(src_conn: connection, trg_conn: connection, table: Table):
         if len(r) == 0:
             break
 
-        trg_cursor.executemany(f"REPLACE INTO {table_name} ({column_names}) values ({values_substitutions})",r)
+        trg_cursor.executemany(
+            f"REPLACE INTO {table_name} ({column_names}) values ({values_substitutions})",
+            r,
+        )
 
-        n_inserts += 2*len(r) - trg_cursor.rowcount
-        n_updates += trg_cursor.rowcount - len(r)    
+        # updates register 2 affected rows (DELETE/INSERT)
+        n_inserts += 2 * len(r) - trg_cursor.rowcount
+        n_updates += trg_cursor.rowcount - len(r)
         trg_conn.commit()
 
-    # Populate row of ETL_history   
-    
+    # Populate new row of ETL_history
     trg_cursor.execute(f"SELECT MAX({table.get_updated_at()}) FROM {table_name};")
     to_timestamp = trg_cursor.fetchone()[0]
-    insert_etl_history(trg_cursor, table.get_name(), n_inserts, n_updates, from_timestamp, to_timestamp)   
-        
+    etl_history_insert(
+        trg_cursor, table.get_name(), n_inserts, n_updates, from_timestamp, to_timestamp
+    )
+
+    trg_conn.commit()
+
     return (n_inserts, n_updates, from_timestamp, to_timestamp)

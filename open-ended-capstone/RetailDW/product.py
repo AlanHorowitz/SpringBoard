@@ -33,8 +33,8 @@ product_dimension_height DOUBLE NULL DEFAULT NULL,
 product_introduced_date DATE NULL DEFAULT NULL,
 product_discontinued tinyint(1) NULL DEFAULT FALSE,
 product_no_longer_offered tinyint(1) NULL DEFAULT FALSE,
-product_inserted_at TIMESTAMP NOT NULL,
-product_updated_at TIMESTAMP NOT NULL,
+product_inserted_at TIMESTAMP(6) NOT NULL,
+product_updated_at TIMESTAMP(6) NOT NULL,
 PRIMARY KEY (product_id));
 """
 
