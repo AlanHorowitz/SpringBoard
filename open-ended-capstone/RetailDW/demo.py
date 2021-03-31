@@ -27,7 +27,7 @@ def demo1() -> None:
     inserts and 50 updates.
     """
     source_connection: connection = psycopg2.connect(
-        "dbname=postgres host=172.17.0.1 user=postgres password=postgres"
+        "dbname=retaildw host=postgres user=user1 password=user1"
     )
 
     total_inserts = 0
@@ -63,12 +63,12 @@ def demo2() -> None:
     Insert and update counts are printed after each operation.
     """
     source_connection: connection = psycopg2.connect(
-        dbname="postgres", host="172.17.0.1", user="postgres", password="postgres"
+        dbname="retaildw", host="172.17.0.1", user="user1", password="user1"
     )
     target_connection: connection = connect(
-        host="localhost",
-        user="admin",
-        password="admin",
+        host="172.17.0.1",
+        user="user1",
+        password="user1",
         database="retaildw",
         charset="utf8",
     )

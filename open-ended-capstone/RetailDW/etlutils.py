@@ -222,7 +222,7 @@ def extract_table_to_target(
             r,
         )
 
-        # updates register 2 affected rows (DELETE/INSERT)
+        # updates registers 2 affected rows (DELETE/INSERT)
         n_inserts += 2 * len(r) - trg_cursor.rowcount
         n_updates += trg_cursor.rowcount - len(r)
         trg_conn.commit()
