@@ -27,7 +27,7 @@ def demo1() -> None:
     inserts and 50 updates.
     """
     source_connection: connection = psycopg2.connect(
-        "dbname=retaildw host=postgres user=user1 password=user1"
+        "dbname=retaildw host=172.17.0.1 user=user1 password=user1"
     )
 
     total_inserts = 0
