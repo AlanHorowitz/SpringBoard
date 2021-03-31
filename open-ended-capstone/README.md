@@ -54,6 +54,7 @@ Enter user1 as password
 docker run -it mysql:8.0.23 mysql -h 172.17.0.1 -D retaildw -u user1 -p
 
 Enter user1 as password
+```
 
-### Note: This program depends on the docker host being at address 172.17.0.1
+## Note: This program depends on the docker host being at address 172.17.0.1
 
