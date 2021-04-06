@@ -1,6 +1,6 @@
 import sys
 
-from RetailDW.demo import demo1
+from RetailDW.demo import demo1, demo2
 
 
 def main():
@@ -9,7 +9,8 @@ def main():
     Usage: python -m RetailDW [demo name]
     """
     demos_available = {
-        "demo1": (demo1, "Initial and incremental load of source system")
+        "demo1": (demo1, "Initial and incremental load of source system"),
+        "demo2": (demo2, "Load of source system.  ETL to target system"),
     }
 
     if len(sys.argv) > 1:
