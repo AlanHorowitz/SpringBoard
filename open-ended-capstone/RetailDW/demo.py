@@ -1,5 +1,6 @@
 from datetime import datetime
 from time import sleep
+from collections import namedtuple
 
 import psycopg2
 from psycopg2.extensions import connection
@@ -136,3 +137,44 @@ def demo2() -> None:
 
     source_connection.close()
     target_connection.close()
+
+
+def demo3() -> None:
+    """ Initial load product and Stores tables
+
+        Then loop through cycles where
+        - Add many in Store Sales facts
+        - Add update product information (less)
+        - Add update store information (even less)
+        - Extract/Load source to target.
+    """
+    TableUpdate = namedtuple('TableUpdate', ['table_name', 'n_inserts', 'n_updates'])
+
+    DailyOperations = [
+        (TableUpdate(PRODUCT_TABLE, 3, 5), TableUpdate(STORE_TABLE, 3, 5)),
+        (TableUpdate(PRODUCT_TABLE, 10, 10), TableUpdate(STORE_TABLE, 13, 52))
+    ]
+
+    InitialLoadSource(Product, 5000)
+    InitialLoadSource(Store, 40)
+
+    for day in DailyOperations:
+
+        for table in day:
+
+            timestamp = datetime.now()
+
+            inserted, updated = load_source_table(
+            source_connection,
+            table[table_obj],
+            n_inserts=table[ins],
+            n_updates=table[upd],
+            timestamp=timestamp,
+            )
+
+        for table in day:  # does the extract order matter?
+
+            inserted, updated, from_time, to_time = extract_table_to_target(
+            source_connection, target_connection, table[table_obj]
+
+
