@@ -148,33 +148,31 @@ def demo3() -> None:
         - Add update store information (even less)
         - Extract/Load source to target.
     """
-    TableUpdate = namedtuple('TableUpdate', ['table_name', 'n_inserts', 'n_updates'])
+    # TableUpdate = namedtuple('TableUpdate', ['table_name', 'n_inserts', 'n_updates'])
 
-    DailyOperations = [
-        (TableUpdate(PRODUCT_TABLE, 3, 5), TableUpdate(STORE_TABLE, 3, 5)),
-        (TableUpdate(PRODUCT_TABLE, 10, 10), TableUpdate(STORE_TABLE, 13, 52))
-    ]
+    # DailyOperations = [
+    #     (TableUpdate(PRODUCT_TABLE, 3, 5), TableUpdate(STORE_TABLE, 3, 5)),
+    #     (TableUpdate(PRODUCT_TABLE, 10, 10), TableUpdate(STORE_TABLE, 13, 52))
+    # ]
 
-    InitialLoadSource(Product, 5000)
-    InitialLoadSource(Store, 40)
+    # InitialLoadSource(Product, 5000)
+    # InitialLoadSource(Store, 40)
 
-    for day in DailyOperations:
+    # for day in DailyOperations:
 
-        for table in day:
+    #     for table in day:
 
-            timestamp = datetime.now()
+    #         timestamp = datetime.now()
 
-            inserted, updated = load_source_table(
-            source_connection,
-            table[table_obj],
-            n_inserts=table[ins],
-            n_updates=table[upd],
-            timestamp=timestamp,
-            )
+    #         inserted, updated = load_source_table(
+    #         source_connection,
+    #         table[table_obj],
+    #         n_inserts=table[ins],
+    #         n_updates=table[upd],
+    #         timestamp=timestamp,
+    #         )
 
-        for table in day:  # does the extract order matter?
+    #     for table in day:  # does the extract order matter?
 
-            inserted, updated, from_time, to_time = extract_table_to_target(
-            source_connection, target_connection, table[table_obj]
-
-
+    #         inserted, updated, from_time, to_time = extract_table_to_target(
+    #         source_connection, target_connection, table[table_obj]

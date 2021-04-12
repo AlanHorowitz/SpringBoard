@@ -1,7 +1,6 @@
 import random
 from typing import List
 
-
 class Column:
     """Database Column metadata"""
 
@@ -12,6 +11,8 @@ class Column:
         isPrimaryKey: bool = False,
         isInsertedAt: bool = False,
         isUpdatedAt: bool = False,
+        xref_table: str = None,
+        xref_column: str = None 
     ):
 
         self._name = column_name
@@ -19,6 +20,8 @@ class Column:
         self._isPrimaryKey = isPrimaryKey
         self._isInsertedAt = isInsertedAt
         self._isUpdatedAt = isUpdatedAt
+        self._xref_table = xref_table
+        self._xref_column = xref_column
 
     def get_name(self) -> str:
 
