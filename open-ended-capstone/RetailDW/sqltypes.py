@@ -1,5 +1,18 @@
 import random
-from typing import List
+from typing import List, Tuple, Dict
+from psycopg2.extensions import cursor
+
+from datetime import datetime
+
+DEFAULT_INSERT_VALUES: Dict[str, object] = {
+    "INTEGER": 98,
+    "VARCHAR": "AAA",
+    "FLOAT": 5.0,
+    "REAL": 5.0,
+    "DATE": "2021-02-11 12:52:47",
+    "TINYINT": 0,
+    "BOOLEAN": True,
+}
 
 class Column:
     """Database Column metadata"""
@@ -73,6 +86,24 @@ class Table:
         if len(primary_keys) == 0:
             raise Exception("Need at least one VARCHAR for update")
 
+    def preload(self, cur: cursor) -> None:
+        pass
+
+    def postload(self) -> None:
+        pass
+
+    def getNewRow(self, pk : int, timestamp: datetime = datetime.now()) -> Tuple:
+
+        d: List[object] = []
+        for col in self.get_columns():
+            if col.isPrimaryKey():
+                d.append(pk)
+            elif col.isInsertedAt() or col.isUpdatedAt():
+                d.append(timestamp)
+            else:
+                d.append(DEFAULT_INSERT_VALUES[col.get_type()])
+        return tuple(d)
+
     def get_name(self) -> str:
 
         return self._name
@@ -98,3 +129,5 @@ class Table:
         """ Return a random eligible update column."""
         i = random.randint(0, len(self._update_columns) - 1)
         return self._update_columns[i]
+
+

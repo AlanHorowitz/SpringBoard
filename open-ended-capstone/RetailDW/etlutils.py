@@ -7,18 +7,22 @@ from psycopg2.extensions import connection, cursor
 
 from RetailDW.sqltypes import Table, Column
 
-DEFAULT_INSERT_VALUES: Dict[str, object] = {
-    "INTEGER": 98,
-    "VARCHAR": "AAA",
-    "FLOAT": 5.0,
-    "REAL": 5.0,
-    "DATE": "2021-02-11 12:52:47",
-    "TINYINT": 0,
-    "BOOLEAN": True,
-}
+# ETL history table records a row for each extract.  The prior to_timestamp is used
+# to limit source system reads to unseen records.
+
+ETL_HISTORY_CREATE_MYSQL = """
+CREATE TABLE IF NOT EXISTS etl_history
+( id INT NOT NULL AUTO_INCREMENT,
+  table_name VARCHAR(80),
+  from_timestamp TIMESTAMP(6), 
+  to_timestamp TIMESTAMP(6),
+  n_inserts INT,
+  n_updates INT,
+  PRIMARY KEY (id)
+);
+"""
 
 DATE_LOW = datetime(1980, 1, 1)  # timestamp preceding all simulations
-
 
 def create_table(conn: connection, create_sql: str) -> None:
 
@@ -68,6 +72,8 @@ def load_source_table(
     row_count = result[0]
     next_key = 1 if result[1] == None else result[1] + 1
 
+    table.preload(cur)
+
     if n_updates > 0:
 
         n_updates = min(n_updates, row_count)
@@ -94,22 +100,12 @@ def load_source_table(
             )
 
         conn.commit()
-
+    
     if n_inserts > 0:
 
         insert_records = []
-        for pk in range(next_key, next_key + n_inserts):
-
-            d: List[object] = []
-            for col in table.get_columns():
-                if col.isPrimaryKey():
-                    d.append(pk)
-                elif col.isInsertedAt() or col.isUpdatedAt():
-                    d.append(timestamp)
-                else:
-                    d.append(DEFAULT_INSERT_VALUES[col.get_type()])
-
-            insert_records.append(tuple(d))
+        for pk in range(next_key, next_key + n_inserts):        
+            insert_records.append(table.getNewRow(pk, timestamp))
 
         values_substitutions = ",".join(
             ["%s"] * n_inserts
@@ -122,23 +118,12 @@ def load_source_table(
 
         conn.commit()
 
+    table.postload()
+
     return n_inserts, n_updates
 
 
-# ETL history table records a row for each extract.  The prior to_timestamp is used
-# to limit source system reads to unseen records.
 
-ETL_HISTORY_CREATE_MYSQL = """
-CREATE TABLE IF NOT EXISTS etl_history
-( id INT NOT NULL AUTO_INCREMENT,
-  table_name VARCHAR(80),
-  from_timestamp TIMESTAMP(6), 
-  to_timestamp TIMESTAMP(6),
-  n_inserts INT,
-  n_updates INT,
-  PRIMARY KEY (id)
-);
-"""
 
 
 def etl_history_get_last_update(trg_cursor: cursor, table_name: str) -> datetime:
