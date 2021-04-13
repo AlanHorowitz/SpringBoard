@@ -3,6 +3,8 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+from RetailDW.sqltypes import Table, Column
+
 from RetailDW.etlutils import (
     create_table,
     load_source_table,

@@ -56,9 +56,31 @@ class Column:
 
         return self._isUpdatedAt
 
+    def get_xref_table(self) -> str:
+
+        return self._xref_table
+    
+    def get_xref_column(self) -> str:
+
+        return self._xref_column
+
+
 
 class Table:
     """Database Table metadata"""
+
+    @staticmethod
+    def _getXrefDict(columns : [Column]) -> Dict:
+
+        xref_dict = {}
+        for col in columns:
+            xref_table, xref_column = col.get_xref_table(), col.get_xref_column()
+            if xref_table and xref_column:                
+                if xref_table in xref_dict:
+                    xref_dict[xref_table][0].append(xref_column)                    
+                else:
+                    xref_dict[xref_table] = [[xref_column], 0, []]
+        return xref_dict
 
     def __init__(self, name: str, *columns: Column):
         """Instatiate a table metadata object.
@@ -83,11 +105,20 @@ class Table:
         self._update_columns = [
             col for col in columns if col.get_type() == "VARCHAR"
         ]  # restrict to VARCHAR update
-        if len(primary_keys) == 0:
+        if len(self._update_columns) == 0:
             raise Exception("Need at least one VARCHAR for update")
 
+        self._xrefDict = Table._getXrefDict(self._columns)                    
+
     def preload(self, cur: cursor) -> None:
-        pass
+        ''' Load foreign key tables for valid references when generating records.  Assume 
+        these tables fit in memory for now.
+        '''
+        for table_name, table_data in self._xrefDict.items():
+            column_names = ",".join(table_data[0])
+            cur.execute(f"SELECT {column_names} from {table_name};") 
+            table_data[2] = cur.fetchall()
+            table_data[1] = len(table_data[2]) 
 
     def postload(self) -> None:
         pass
@@ -120,7 +151,7 @@ class Table:
     def get_updated_at(self) -> str:
 
         return self._updated_at
-
+    
     def get_column_names(self) -> List[str]:
         """ Return a complete list of Column names for the table."""
         return [col.get_name() for col in self._columns]
