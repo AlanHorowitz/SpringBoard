@@ -10,6 +10,8 @@ from mysql.connector import connect
 
 from RetailDW.etlutils import (
     create_table,
+    create_source_tables,
+    create_target_tables,
     load_source_table,
     extract_table_to_target,
     ETL_HISTORY_CREATE_MYSQL,
@@ -18,6 +20,18 @@ from RetailDW.product import (
     PRODUCT_TABLE,
     PRODUCT_CREATE_SQL_PG,
     PRODUCT_CREATE_SQL_MYSQL,
+)
+
+from RetailDW.store import (
+    STORE_TABLE,
+    STORE_CREATE_SQL_PG,
+    STORE_CREATE_SQL_MYSQL,
+)
+
+from RetailDW.store_sales import (
+    STORE_SALES_TABLE,
+    STORE_SALES_CREATE_SQL_PG,
+    STORE_SALES_CREATE_SQL_MYSQL,
 )
 
 
@@ -144,35 +158,77 @@ def demo3() -> None:
 
         Then loop through cycles where
         - Add many in Store Sales facts
-        - Add update product information (less)
-        - Add update store information (even less)
+        - Add update product information (fewer)
+        - Add update store information (even fewer)
         - Extract/Load source to target.
+
     """
-    # TableUpdate = namedtuple('TableUpdate', ['table_name', 'n_inserts', 'n_updates'])
+    TableBatch = namedtuple('TableBatch', ['table_object', 'n_inserts', 'n_updates'])
 
-    # DailyOperations = [
-    #     (TableUpdate(PRODUCT_TABLE, 3, 5), TableUpdate(STORE_TABLE, 3, 5)),
-    #     (TableUpdate(PRODUCT_TABLE, 10, 10), TableUpdate(STORE_TABLE, 13, 52))
-    # ]
+    # get connections and intialize systems
 
-    # InitialLoadSource(Product, 5000)
-    # InitialLoadSource(Store, 40)
+    InitialLoads = [TableBatch(PRODUCT_TABLE, 5000, 0), TableBatch(STORE_TABLE, 40, 0)]
 
-    # for day in DailyOperations:
+    DailyOperations = [
+        (TableBatch(PRODUCT_TABLE, 3, 5), TableBatch(STORE_TABLE, 3, 5)),
+        (TableBatch(PRODUCT_TABLE, 10, 10), TableBatch(STORE_TABLE, 13, 52))
+    ]
 
-    #     for table in day:
+    source_connection: connection = psycopg2.connect(
+        dbname="retaildw", host="172.17.0.1", user="user1", password="user1"
+    )
 
-    #         timestamp = datetime.now()
+    target_connection: connection = connect(
+        host="172.17.0.1",
+        user="user1",
+        password="user1",
+        database="retaildw",
+        charset="utf8",
+    )
 
-    #         inserted, updated = load_source_table(
-    #         source_connection,
-    #         table[table_obj],
-    #         n_inserts=table[ins],
-    #         n_updates=table[upd],
-    #         timestamp=timestamp,
-    #         )
+    create_source_tables(source_connection, [PRODUCT_TABLE, STORE_TABLE, STORE_SALES_TABLE])
+    create_target_tables(target_connection, [PRODUCT_TABLE, STORE_TABLE, STORE_SALES_TABLE])
 
-    #     for table in day:  # does the extract order matter?
+    timestamp = datetime.now()
 
-    #         inserted, updated, from_time, to_time = extract_table_to_target(
-    #         source_connection, target_connection, table[table_obj]
+    for batch in InitialLoads:
+
+        inserted, _ = load_source_table(
+                source_connection,
+                batch.table_object,
+                n_inserts=batch.n_inserts,
+                n_updates=batch.n_updates,
+                timestamp=timestamp,
+                )
+
+        print(f"{inserted} records inserted for table {batch.table_object.get_name()} at source: {timestamp}")
+        
+    for day in DailyOperations:
+
+        for table in day:
+
+            timestamp = datetime.now()
+
+            inserted, updated = load_source_table(
+            source_connection,
+            table.table_object,
+            n_inserts=table.n_inserts,
+            n_updates=table.n_updates,
+            timestamp=timestamp,
+            )
+
+            print(
+            f"{inserted} inserts and {updated} updates for table {table.table_object.get_name()} processed at source."
+            )
+    
+        for table in day:  # does the extract order matter?
+
+            inserted, updated, from_time, to_time = extract_table_to_target(
+            source_connection, target_connection, table.table_object)
+
+            print(
+                f"{inserted} inserts and {updated} updates for {table.table_object.get_name()} processed at target: From: {from_time} To: {to_time} "
+            )
+
+    source_connection.close()
+    target_connection.close()

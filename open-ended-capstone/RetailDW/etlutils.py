@@ -31,6 +31,15 @@ def create_table(conn: connection, create_sql: str) -> None:
     conn.commit()
     cur.close()
 
+def create_source_tables(source_connection : connection, tables : [Table]) -> None:
+        for table in tables:
+            create_table(source_connection, table.get_create_sql_postgres())
+
+def create_target_tables(target_connection : connection, tables : [Table]) -> None:
+        for table in tables:
+            create_table(target_connection, table.get_create_sql_mysql())
+
+        create_table(target_connection, ETL_HISTORY_CREATE_MYSQL)
 
 def load_source_table(
     conn: connection,
@@ -219,4 +228,7 @@ def extract_table_to_target(
 
     trg_conn.commit()
 
+    src_cursor.close()
+    trg_cursor.close()
+    
     return (n_inserts, n_updates, from_timestamp, to_timestamp)

@@ -93,7 +93,7 @@ class Table:
                     xref_dict[xref_table] = Table.XrefTableData(column_list=[xref_column])
         return xref_dict
 
-    def __init__(self, name: str, *columns: Column):
+    def __init__(self, name: str, create_sql_postgres : str, create_sql_mysql : str, *columns: Column):
         """Instatiate a table metadata object.
 
         Note: Source system tables in RetailDW must have a single column integer primary key
@@ -101,6 +101,8 @@ class Table:
         """
 
         self._name = name
+        self._create_sql_postgres = create_sql_postgres
+        self._create_sql_mysql = create_sql_mysql
         self._columns = [col for col in columns]
         primary_keys = [col.get_name() for col in columns if col.isPrimaryKey()]
         inserted_ats = [col.get_name() for col in columns if col.isInsertedAt()]
@@ -183,6 +185,14 @@ class Table:
     def get_updated_at(self) -> str:
 
         return self._updated_at
+
+    def get_create_sql_mysql(self) -> str:
+
+        return self._create_sql_mysql
+
+    def get_create_sql_postgres(self) -> str:
+
+        return self._create_sql_postgres
     
     def get_column_names(self) -> List[str]:
         """ Return a complete list of Column names for the table."""

@@ -28,6 +28,8 @@ PRIMARY KEY (store_id));
 
 STORE_TABLE = Table(
     "store",
+    STORE_CREATE_SQL_PG,
+    STORE_CREATE_SQL_MYSQL,
     Column("store_id", "INTEGER", isPrimaryKey=True),
     Column("store_name", "VARCHAR"),
     Column("store_manager_name", "VARCHAR"),    

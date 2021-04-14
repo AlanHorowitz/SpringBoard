@@ -34,6 +34,8 @@ PRIMARY KEY (store_sales_id));
 
 STORE_SALES_TABLE = Table(
     "store_sales",
+    STORE_SALES_CREATE_SQL_PG,
+    STORE_SALES_CREATE_SQL_MYSQL,
     Column("store_sales_id", "INTEGER", isPrimaryKey=True),
     Column("store_sales_store_id", "INTEGER", xref_table=STORE_TABLE.get_name(), xref_column="store_id"),
     Column("store_sales_product_id", "INTEGER", xref_table=PRODUCT_TABLE.get_name(), xref_column="product_id"),
