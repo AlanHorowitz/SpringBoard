@@ -3,6 +3,7 @@ from typing import List, Tuple, Dict
 from psycopg2.extensions import cursor
 
 from datetime import datetime
+from collections import namedtuple
 
 DEFAULT_INSERT_VALUES: Dict[str, object] = {
     "INTEGER": 98,
@@ -72,6 +73,13 @@ class Column:
 class Table:
     """Database Table metadata"""
 
+    class XrefTableData: 
+        def __init__(self, column_list=[], result_set=[], next_random_row=0, num_rows=0):
+            self._column_list = column_list
+            self._resultset = result_set
+            self._next_random_row = next_random_row
+            self._num_rows = num_rows                             
+
     @staticmethod
     def _getXrefDict(columns : [Column]) -> Dict:
 
@@ -80,9 +88,9 @@ class Table:
             if col.isXref():
                 xref_table, xref_column = col.get_xref_table(), col.get_xref_column()            
                 if xref_table in xref_dict:
-                    xref_dict[xref_table][0].append(xref_column)                    
+                    xref_dict[xref_table]._column_list.append(xref_column)                    
                 else:
-                    xref_dict[xref_table] = [[xref_column], 0, [], 0]
+                    xref_dict[xref_table] = Table.XrefTableData(column_list=[xref_column])
         return xref_dict
 
     def __init__(self, name: str, *columns: Column):
@@ -118,13 +126,17 @@ class Table:
         these tables fit in memory for now.  Update the xrefDict with resultset and count.
         '''
         for table_name, table_data in self._xrefDict.items():
-            column_names = ",".join(table_data[0])
+            column_names = ",".join(table_data._column_list)
             cur.execute(f"SELECT {column_names} from {table_name};") 
-            table_data[2] = cur.fetchall()
-            table_data[1] = len(table_data[2]) 
+            table_data._result_set = cur.fetchall()
+            table_data._num_rows = len(table_data._result_set) 
 
     def postload(self) -> None:
-        pass
+        '''Clear references to xref result set'''
+        for table_data in self._xrefDict.values():
+            table_data._result_set = []
+            table_data._num_rows = 0
+            table_data.next_random_row = 0
 
     def getNewRow(self, pk : int, timestamp: datetime = datetime.now()) -> Tuple:
 
@@ -146,12 +158,12 @@ class Table:
     def _setXrefTableRows(self):
         """Update the Xref dictionary with the current random rows of the result sets to use ."""
         for table_data in self._xrefDict.values():
-            table_data[3] = random.randint(0, table_data[1] - 1)
+            table_data._next_random_row = random.randint(0, table_data._num_rows - 1)
 
     def _getXrefValue(self, col : Column) -> str:
 
-        row = self._xrefDict[col._xref_table][3]
-        value = self._xrefDict[col._xref_table][2][row][col._xref_column]
+        row = self._xrefDict[col._xref_table]._next_random_row
+        value = self._xrefDict[col._xref_table]._result_set[row][col._xref_column]
 
         return value
 
