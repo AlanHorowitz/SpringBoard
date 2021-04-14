@@ -17,11 +17,11 @@ def test_getXrefDict():
 
     xref_dict = Table._getXrefDict(cols2)
     assert len(xref_dict) == 2
-    assert len(xref_dict["table1"]) == 2
-    assert len(xref_dict["table2"]) == 1
-    assert 'column1' in xref_dict['table1']
-    assert 'column2' in xref_dict['table1']
-    assert 'column3' in xref_dict['table2']
+    assert len(xref_dict["table1"][0]) == 2
+    assert len(xref_dict["table2"][0]) == 1
+    assert 'column1' in xref_dict['table1'][0]
+    assert 'column2' in xref_dict['table1'][0]
+    assert 'column3' in xref_dict['table2'][0]
 
     cols3 = [Column("product_description", "VARCHAR", xref_table="table1"),
              Column("product_category", "VARCHAR", xref_column="column2")]

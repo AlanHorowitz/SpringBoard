@@ -59,20 +59,18 @@ def load_source_table(
         A tuple, (n_inserted, n_updated), representing the number of rows inserted and updated. 
         In the future these may differ from the input values.
     """
+    cur: cursor = conn.cursor(cursor_factory=DictCursor)
+    table.preload(cur)
 
     table_name = table.get_name()
     primary_key_column = table.get_primary_key()
     updated_at_column = table.get_updated_at()
-    column_names = ",".join(table.get_column_names())  # for SELECT statements
-
-    cur: cursor = conn.cursor(cursor_factory=DictCursor)
+    column_names = ",".join(table.get_column_names())  # for SELECT statements    
 
     cur.execute(f"SELECT COUNT(*), MAX({primary_key_column}) from {table_name};")
     result: DictRow = cur.fetchone()
     row_count = result[0]
-    next_key = 1 if result[1] == None else result[1] + 1
-
-    table.preload(cur)
+    next_key = 1 if result[1] == None else result[1] + 1    
 
     if n_updates > 0:
 
