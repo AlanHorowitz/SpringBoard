@@ -1,5 +1,5 @@
 import random
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 from psycopg2.extensions import cursor
 
 from datetime import datetime
@@ -15,6 +15,7 @@ DEFAULT_INSERT_VALUES: Dict[str, object] = {
     "BOOLEAN": True,
 }
 
+
 class Column:
     """Database Column metadata"""
 
@@ -25,8 +26,8 @@ class Column:
         isPrimaryKey: bool = False,
         isInsertedAt: bool = False,
         isUpdatedAt: bool = False,
-        xref_table: str = None,
-        xref_column: str = None 
+        xref_table: str = "",
+        xref_column: str = "",
     ):
 
         self._name = column_name
@@ -60,40 +61,50 @@ class Column:
     def get_xref_table(self) -> str:
 
         return self._xref_table
-    
+
     def get_xref_column(self) -> str:
 
         return self._xref_column
 
     def isXref(self) -> bool:
 
-        return self._xref_table and self._xref_column
+        return self._xref_table != "" and self._xref_column != ""
 
 
 class Table:
     """Database Table metadata"""
 
-    class XrefTableData: 
-        def __init__(self, column_list=[], result_set=[], next_random_row=0, num_rows=0):
+    class XrefTableData:
+        def __init__(
+            self, column_list=[], result_set=[], next_random_row=0, num_rows=0
+        ):
             self._column_list = column_list
-            self._resultset = result_set
+            self._result_set = result_set
             self._next_random_row = next_random_row
-            self._num_rows = num_rows                             
+            self._num_rows = num_rows
 
     @staticmethod
-    def _getXrefDict(columns : [Column]) -> Dict:
+    def _initXrefDict(columns: List[Column]) -> Dict[str, XrefTableData]:
 
-        xref_dict = {}
+        xref_dict: Dict[str, Table.XrefTableData] = {}
         for col in columns:
             if col.isXref():
-                xref_table, xref_column = col.get_xref_table(), col.get_xref_column()            
+                xref_table, xref_column = col.get_xref_table(), col.get_xref_column()
                 if xref_table in xref_dict:
-                    xref_dict[xref_table]._column_list.append(xref_column)                    
+                    xref_dict[xref_table]._column_list.append(xref_column)
                 else:
-                    xref_dict[xref_table] = Table.XrefTableData(column_list=[xref_column])
+                    xref_dict[xref_table] = Table.XrefTableData(
+                        column_list=[xref_column]
+                    )
         return xref_dict
 
-    def __init__(self, name: str, create_sql_postgres : str, create_sql_mysql : str, *columns: Column):
+    def __init__(
+        self,
+        name: str,
+        create_sql_postgres: str,
+        create_sql_mysql: str,
+        *columns: Column,
+    ):
         """Instatiate a table metadata object.
 
         Note: Source system tables in RetailDW must have a single column integer primary key
@@ -121,26 +132,28 @@ class Table:
         if len(self._update_columns) == 0:
             raise Exception("Need at least one VARCHAR for update")
 
-        self._xrefDict = Table._getXrefDict(self._columns)                    
+        self._xrefDict: Dict[str, Table.XrefTableData] = Table._initXrefDict(
+            self._columns
+        )
 
     def preload(self, cur: cursor) -> None:
-        ''' Load foreign key tables for valid references when generating records.  Assume 
-        these tables fit in memory for now.  Update the xrefDict with resultset and count.
-        '''
+        """ Load foreign key tables for valid references when generating records.  Assume 
+        these tables fit in memory for now.  Update the xrefDict with result set and count.
+        """
         for table_name, table_data in self._xrefDict.items():
             column_names = ",".join(table_data._column_list)
-            cur.execute(f"SELECT {column_names} from {table_name};") 
+            cur.execute(f"SELECT {column_names} from {table_name};")
             table_data._result_set = cur.fetchall()
-            table_data._num_rows = len(table_data._result_set) 
+            table_data._num_rows = len(table_data._result_set)
 
     def postload(self) -> None:
-        '''Clear references to xref result set'''
+        """Clear references to xref result set"""
         for table_data in self._xrefDict.values():
             table_data._result_set = []
             table_data._num_rows = 0
-            table_data.next_random_row = 0
+            table_data._next_random_row = 0
 
-    def getNewRow(self, pk : int, timestamp: datetime = datetime.now()) -> Tuple:
+    def getNewRow(self, pk: int, timestamp: datetime = datetime.now()) -> Tuple:
 
         d: List[object] = []
         self._setXrefTableRows()
@@ -158,11 +171,12 @@ class Table:
         return tuple(d)
 
     def _setXrefTableRows(self):
-        """Update the Xref dictionary with the current random rows of the result sets to use ."""
+        """Update the Xref dictionary with the current random rows for each table."""
         for table_data in self._xrefDict.values():
             table_data._next_random_row = random.randint(0, table_data._num_rows - 1)
 
-    def _getXrefValue(self, col : Column) -> str:
+    def _getXrefValue(self, col: Column) -> str:
+        """ Return the column's value from the current random DictRow."""
 
         row = self._xrefDict[col._xref_table]._next_random_row
         value = self._xrefDict[col._xref_table]._result_set[row][col._xref_column]
@@ -193,7 +207,7 @@ class Table:
     def get_create_sql_postgres(self) -> str:
 
         return self._create_sql_postgres
-    
+
     def get_column_names(self) -> List[str]:
         """ Return a complete list of Column names for the table."""
         return [col.get_name() for col in self._columns]
@@ -202,5 +216,3 @@ class Table:
         """ Return a random eligible update column."""
         i = random.randint(0, len(self._update_columns) - 1)
         return self._update_columns[i]
-
-

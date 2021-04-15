@@ -1,6 +1,6 @@
 import sys
 
-from RetailDW.demo import demo1, demo2
+from RetailDW.demo import demo1, demo2, demo3
 
 
 def main():
@@ -11,6 +11,7 @@ def main():
     demos_available = {
         "demo1": (demo1, "Initial and incremental load of source system"),
         "demo2": (demo2, "Load of source system.  ETL to target system"),
+        "demo3": (demo3, "Load 3 tables to source system.  ETL to target system"),
     }
 
     if len(sys.argv) > 1:

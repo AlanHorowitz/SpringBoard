@@ -41,9 +41,9 @@ PRIMARY KEY (product_id));
 """
 
 PRODUCT_TABLE = Table(
-    "product", 
+    "product",
     PRODUCT_CREATE_SQL_PG,
-    PRODUCT_CREATE_SQL_MYSQL,   
+    PRODUCT_CREATE_SQL_MYSQL,
     Column("product_id", "INTEGER", isPrimaryKey=True),
     Column("product_name", "VARCHAR"),
     Column("product_description", "VARCHAR"),
@@ -58,5 +58,5 @@ PRODUCT_TABLE = Table(
     Column("product_discontinued", "BOOLEAN"),
     Column("product_no_longer_offered", "BOOLEAN"),
     Column("product_inserted_at", "TIMESTAMP", isInsertedAt=True),
-    Column("product_updated_at", "TIMESTAMP", isUpdatedAt=True),    
+    Column("product_updated_at", "TIMESTAMP", isUpdatedAt=True),
 )

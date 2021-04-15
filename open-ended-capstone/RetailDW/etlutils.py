@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS etl_history
 
 DATE_LOW = datetime(1980, 1, 1)  # timestamp preceding all simulations
 
+
 def create_table(conn: connection, create_sql: str) -> None:
 
     cur: cursor = conn.cursor()
@@ -31,15 +32,22 @@ def create_table(conn: connection, create_sql: str) -> None:
     conn.commit()
     cur.close()
 
-def create_source_tables(source_connection : connection, tables : [Table]) -> None:
-        for table in tables:
-            create_table(source_connection, table.get_create_sql_postgres())
 
-def create_target_tables(target_connection : connection, tables : [Table]) -> None:
-        for table in tables:
-            create_table(target_connection, table.get_create_sql_mysql())
+def create_source_tables(source_connection: connection, tables: List[Table]) -> None:
+    """Create tables for postgres source system."""
 
-        create_table(target_connection, ETL_HISTORY_CREATE_MYSQL)
+    for table in tables:
+        create_table(source_connection, table.get_create_sql_postgres())
+
+
+def create_target_tables(target_connection: connection, tables: List[Table]) -> None:
+    """Create tables for mySQL target system.  Include etl_history table."""
+
+    for table in tables:
+        create_table(target_connection, table.get_create_sql_mysql())
+
+    create_table(target_connection, ETL_HISTORY_CREATE_MYSQL)
+
 
 def load_source_table(
     conn: connection,
@@ -74,12 +82,12 @@ def load_source_table(
     table_name = table.get_name()
     primary_key_column = table.get_primary_key()
     updated_at_column = table.get_updated_at()
-    column_names = ",".join(table.get_column_names())  # for SELECT statements    
+    column_names = ",".join(table.get_column_names())  # for SELECT statements
 
     cur.execute(f"SELECT COUNT(*), MAX({primary_key_column}) from {table_name};")
     result: DictRow = cur.fetchone()
     row_count = result[0]
-    next_key = 1 if result[1] == None else result[1] + 1    
+    next_key = 1 if result[1] == None else result[1] + 1
 
     if n_updates > 0:
 
@@ -107,11 +115,11 @@ def load_source_table(
             )
 
         conn.commit()
-    
+
     if n_inserts > 0:
 
         insert_records = []
-        for pk in range(next_key, next_key + n_inserts):        
+        for pk in range(next_key, next_key + n_inserts):
             insert_records.append(table.getNewRow(pk, timestamp))
 
         values_substitutions = ",".join(
@@ -128,9 +136,6 @@ def load_source_table(
     table.postload()
 
     return n_inserts, n_updates
-
-
-
 
 
 def etl_history_get_last_update(trg_cursor: cursor, table_name: str) -> datetime:
@@ -230,5 +235,5 @@ def extract_table_to_target(
 
     src_cursor.close()
     trg_cursor.close()
-    
+
     return (n_inserts, n_updates, from_timestamp, to_timestamp)
