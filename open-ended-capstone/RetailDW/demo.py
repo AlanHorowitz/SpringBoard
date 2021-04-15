@@ -211,7 +211,9 @@ def demo3() -> None:
 
     for batch_list in DailyOperations:
 
+        print("-" * 19)
         print(f"Day {day} of operations")
+        print("-" * 19)
 
         for batch in batch_list:
 
@@ -236,7 +238,7 @@ def demo3() -> None:
             )
 
             print(
-                f"{inserted} inserts and {updated} updates for {batch.table_object.get_name()} processed at target: From: {from_time} To: {to_time} "
+                f"{inserted} inserts and {updated} updates for table {batch.table_object.get_name()} processed at target: From: {from_time} To: {to_time} "
             )
 
         day += 1
