@@ -1,5 +1,6 @@
 from datetime import datetime
 from time import sleep
+from collections import namedtuple
 
 import psycopg2
 from psycopg2.extensions import connection
@@ -9,6 +10,8 @@ from mysql.connector import connect
 
 from RetailDW.etlutils import (
     create_table,
+    create_source_tables,
+    create_target_tables,
     load_source_table,
     extract_table_to_target,
     ETL_HISTORY_CREATE_MYSQL,
@@ -17,6 +20,18 @@ from RetailDW.product import (
     PRODUCT_TABLE,
     PRODUCT_CREATE_SQL_PG,
     PRODUCT_CREATE_SQL_MYSQL,
+)
+
+from RetailDW.store import (
+    STORE_TABLE,
+    STORE_CREATE_SQL_PG,
+    STORE_CREATE_SQL_MYSQL,
+)
+
+from RetailDW.store_sales import (
+    STORE_SALES_TABLE,
+    STORE_SALES_CREATE_SQL_PG,
+    STORE_SALES_CREATE_SQL_MYSQL,
 )
 
 
@@ -133,6 +148,100 @@ def demo2() -> None:
     print(
         f"{total_inserts_target} inserts and {total_updates_target} updates processed at target."
     )
+
+    source_connection.close()
+    target_connection.close()
+
+
+def demo3() -> None:
+    """ Demonstrate three days operation of ETL system using product, store and store_sales tables.
+
+        Day 1: Load 5000 products and 40 stores to source system
+               Extract and load all to target. 
+
+        Day 2: Load 5 new products and update 50 existing products to source system
+               Load 0 new stores and update 2 existing stores to source system 
+               Load 50000 new store_sales records
+               Extract and load all to target. 
+
+        Day 3: Load 10 new products and update 30 existing products to source system
+               Load 1 new stores and update 0 existing stores to source system 
+               Load 50000 new store_sales records
+               Extract and load all to target.
+                
+    """
+    # represent batch of inserts and updates on a table.
+    TableBatch = namedtuple("TableBatch", ["table_object", "n_inserts", "n_updates"])
+
+    DailyOperations = [
+        (TableBatch(PRODUCT_TABLE, 5000, 0), TableBatch(STORE_TABLE, 40, 0)),
+        (
+            TableBatch(PRODUCT_TABLE, 5, 50),
+            TableBatch(STORE_TABLE, 0, 2),
+            TableBatch(STORE_SALES_TABLE, 50000, 0),
+        ),
+        (
+            TableBatch(PRODUCT_TABLE, 10, 30),
+            TableBatch(STORE_TABLE, 1, 0),
+            TableBatch(STORE_SALES_TABLE, 50000, 0),
+        ),
+    ]
+
+    source_connection: connection = psycopg2.connect(
+        dbname="retaildw", host="172.17.0.1", user="user1", password="user1"
+    )
+
+    target_connection: connection = connect(
+        host="172.17.0.1",
+        user="user1",
+        password="user1",
+        database="retaildw",
+        charset="utf8",
+    )
+
+    create_source_tables(
+        source_connection, [PRODUCT_TABLE, STORE_TABLE, STORE_SALES_TABLE]
+    )
+    create_target_tables(
+        target_connection, [PRODUCT_TABLE, STORE_TABLE, STORE_SALES_TABLE]
+    )
+
+    timestamp = datetime.now()
+    day = 1
+
+    for batch_list in DailyOperations:
+
+        print("-" * 19)
+        print(f"Day {day} of operations")
+        print("-" * 19)
+
+        for batch in batch_list:
+
+            timestamp = datetime.now()
+
+            inserted, updated = load_source_table(
+                source_connection,
+                batch.table_object,
+                n_inserts=batch.n_inserts,
+                n_updates=batch.n_updates,
+                timestamp=timestamp,
+            )
+
+            print(
+                f"{inserted} inserts and {updated} updates for table {batch.table_object.get_name()} processed at source: {timestamp}"
+            )
+
+        for batch in batch_list:
+
+            inserted, updated, from_time, to_time = extract_table_to_target(
+                source_connection, target_connection, batch.table_object
+            )
+
+            print(
+                f"{inserted} inserts and {updated} updates for table {batch.table_object.get_name()} processed at target: From: {from_time} To: {to_time} "
+            )
+
+        day += 1
 
     source_connection.close()
     target_connection.close()
