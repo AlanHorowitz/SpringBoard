@@ -8,4 +8,4 @@ for line in sys.stdin:
 
     vin, values = line.strip().split("\t")
     _, make, year = values.split(",")
-    print(make + year + "\t" + "1")
+    print make + year + "\t" + "1"

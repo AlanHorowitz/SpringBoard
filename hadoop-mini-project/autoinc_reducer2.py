@@ -14,10 +14,10 @@ for line in sys.stdin:
 
     if makeyear != last_makeyear:
         if last_makeyear != None:
-            print(last_makeyear + "\t" + str(total))
+            print last_makeyear + "\t" + str(total)
         last_makeyear = makeyear
         total = 0
 
     total += 1
 
-print(last_makeyear + "\t" + str(total))
+print last_makeyear + "\t" + str(total)

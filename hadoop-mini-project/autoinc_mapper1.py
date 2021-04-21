@@ -9,4 +9,4 @@ for line in sys.stdin:
     cols = line.strip().split(",")
     key = cols[2]
     value = ",".join([cols[1], cols[3], cols[5]])
-    print(f"{key}\t{value}")
+    print '%s\t%s' % (key, value)

@@ -18,7 +18,7 @@ def flush(group_master):
     for _ in range(group_master.accident_count):
         key = group_master.vin
         value = ",".join(["A", group_master.make, group_master.year])
-        print(f"{key}\t{value}")
+        print '%s\t%s' % (key, value)
 
 
 def reset(group_master):
