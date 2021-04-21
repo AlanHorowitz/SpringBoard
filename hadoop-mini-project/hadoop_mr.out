@@ -1,0 +1,164 @@
+21/04/21 21:33:05 WARN streaming.StreamJob: -file option is deprecated, please use generic option -files instead.
+packageJobJar: [autoinc_mapper1.py, autoinc_reducer1.py] [/usr/hdp/3.0.1.0-187/hadoop-mapreduce/hadoop-streaming-3.1.1.3.0.1.0-187.jar] /tmp/streamjob2133317120939675049.jar tmpDir=null
+21/04/21 21:33:07 INFO client.RMProxy: Connecting to ResourceManager at sandbox-hdp.hortonworks.com/172.18.0.2:8050
+21/04/21 21:33:07 INFO client.AHSProxy: Connecting to Application History server at sandbox-hdp.hortonworks.com/172.18.0.2:10200
+21/04/21 21:33:07 INFO client.RMProxy: Connecting to ResourceManager at sandbox-hdp.hortonworks.com/172.18.0.2:8050
+21/04/21 21:33:07 INFO client.AHSProxy: Connecting to Application History server at sandbox-hdp.hortonworks.com/172.18.0.2:10200
+21/04/21 21:33:07 INFO mapreduce.JobResourceUploader: Disabling Erasure Coding for path: /user/root/.staging/job_1619036610458_0008
+21/04/21 21:33:08 INFO mapred.FileInputFormat: Total input files to process : 1
+21/04/21 21:33:08 INFO mapreduce.JobSubmitter: number of splits:2
+21/04/21 21:33:08 INFO mapreduce.JobSubmitter: Submitting tokens for job: job_1619036610458_0008
+21/04/21 21:33:08 INFO mapreduce.JobSubmitter: Executing with tokens: []
+21/04/21 21:33:09 INFO conf.Configuration: found resource resource-types.xml at file:/etc/hadoop/3.0.1.0-187/0/resource-types.xml
+21/04/21 21:33:09 INFO impl.YarnClientImpl: Submitted application application_1619036610458_0008
+21/04/21 21:33:09 INFO mapreduce.Job: The url to track the job: http://sandbox-hdp.hortonworks.com:8088/proxy/application_1619036610458_0008/
+21/04/21 21:33:09 INFO mapreduce.Job: Running job: job_1619036610458_0008
+21/04/21 21:33:16 INFO mapreduce.Job: Job job_1619036610458_0008 running in uber mode : false
+21/04/21 21:33:16 INFO mapreduce.Job:  map 0% reduce 0%
+21/04/21 21:33:22 INFO mapreduce.Job:  map 50% reduce 0%
+21/04/21 21:33:23 INFO mapreduce.Job:  map 100% reduce 0%
+21/04/21 21:33:30 INFO mapreduce.Job:  map 100% reduce 100%
+21/04/21 21:33:31 INFO mapreduce.Job: Job job_1619036610458_0008 completed successfully
+21/04/21 21:33:31 INFO mapreduce.Job: Counters: 53
+	File System Counters
+		FILE: Number of bytes read=446
+		FILE: Number of bytes written=716031
+		FILE: Number of read operations=0
+		FILE: Number of large read operations=0
+		FILE: Number of write operations=0
+		HDFS: Number of bytes read=1724
+		HDFS: Number of bytes written=396
+		HDFS: Number of read operations=11
+		HDFS: Number of large read operations=0
+		HDFS: Number of write operations=2
+	Job Counters 
+		Launched map tasks=2
+		Launched reduce tasks=1
+		Data-local map tasks=2
+		Total time spent by all maps in occupied slots (ms)=39304
+		Total time spent by all reduces in occupied slots (ms)=21448
+		Total time spent by all map tasks (ms)=9826
+		Total time spent by all reduce tasks (ms)=5362
+		Total vcore-milliseconds taken by all map tasks=9826
+		Total vcore-milliseconds taken by all reduce tasks=5362
+		Total megabyte-milliseconds taken by all map tasks=10061824
+		Total megabyte-milliseconds taken by all reduce tasks=5490688
+	Map-Reduce Framework
+		Map input records=16
+		Map output records=16
+		Map output bytes=408
+		Map output materialized bytes=452
+		Input split bytes=234
+		Combine input records=0
+		Combine output records=0
+		Reduce input groups=5
+		Reduce shuffle bytes=452
+		Reduce input records=16
+		Reduce output records=12
+		Spilled Records=32
+		Shuffled Maps =2
+		Failed Shuffles=0
+		Merged Map outputs=2
+		GC time elapsed (ms)=358
+		CPU time spent (ms)=2970
+		Physical memory (bytes) snapshot=1721880576
+		Virtual memory (bytes) snapshot=8332058624
+		Total committed heap usage (bytes)=1576534016
+		Peak Map Physical memory (bytes)=762368000
+		Peak Map Virtual memory (bytes)=2841505792
+		Peak Reduce Physical memory (bytes)=204402688
+		Peak Reduce Virtual memory (bytes)=2649313280
+	Shuffle Errors
+		BAD_ID=0
+		CONNECTION=0
+		IO_ERROR=0
+		WRONG_LENGTH=0
+		WRONG_MAP=0
+		WRONG_REDUCE=0
+	File Input Format Counters 
+		Bytes Read=1490
+	File Output Format Counters 
+		Bytes Written=396
+21/04/21 21:33:31 INFO streaming.StreamJob: Output directory: /user/admin/all_accidents
+21/04/21 21:33:33 WARN streaming.StreamJob: -file option is deprecated, please use generic option -files instead.
+packageJobJar: [autoinc_mapper2.py, autoinc_reducer2.py] [/usr/hdp/3.0.1.0-187/hadoop-mapreduce/hadoop-streaming-3.1.1.3.0.1.0-187.jar] /tmp/streamjob7564911773016475836.jar tmpDir=null
+21/04/21 21:33:35 INFO client.RMProxy: Connecting to ResourceManager at sandbox-hdp.hortonworks.com/172.18.0.2:8050
+21/04/21 21:33:35 INFO client.AHSProxy: Connecting to Application History server at sandbox-hdp.hortonworks.com/172.18.0.2:10200
+21/04/21 21:33:35 INFO client.RMProxy: Connecting to ResourceManager at sandbox-hdp.hortonworks.com/172.18.0.2:8050
+21/04/21 21:33:35 INFO client.AHSProxy: Connecting to Application History server at sandbox-hdp.hortonworks.com/172.18.0.2:10200
+21/04/21 21:33:35 INFO mapreduce.JobResourceUploader: Disabling Erasure Coding for path: /user/root/.staging/job_1619036610458_0009
+21/04/21 21:33:36 INFO mapred.FileInputFormat: Total input files to process : 1
+21/04/21 21:33:36 INFO mapreduce.JobSubmitter: number of splits:2
+21/04/21 21:33:37 INFO mapreduce.JobSubmitter: Submitting tokens for job: job_1619036610458_0009
+21/04/21 21:33:37 INFO mapreduce.JobSubmitter: Executing with tokens: []
+21/04/21 21:33:37 INFO conf.Configuration: found resource resource-types.xml at file:/etc/hadoop/3.0.1.0-187/0/resource-types.xml
+21/04/21 21:33:37 INFO impl.YarnClientImpl: Submitted application application_1619036610458_0009
+21/04/21 21:33:37 INFO mapreduce.Job: The url to track the job: http://sandbox-hdp.hortonworks.com:8088/proxy/application_1619036610458_0009/
+21/04/21 21:33:37 INFO mapreduce.Job: Running job: job_1619036610458_0009
+21/04/21 21:33:44 INFO mapreduce.Job: Job job_1619036610458_0009 running in uber mode : false
+21/04/21 21:33:44 INFO mapreduce.Job:  map 0% reduce 0%
+21/04/21 21:33:51 INFO mapreduce.Job:  map 50% reduce 0%
+21/04/21 21:33:52 INFO mapreduce.Job:  map 100% reduce 0%
+21/04/21 21:33:59 INFO mapreduce.Job:  map 100% reduce 100%
+21/04/21 21:34:00 INFO mapreduce.Job: Job job_1619036610458_0009 completed successfully
+21/04/21 21:34:00 INFO mapreduce.Job: Counters: 53
+	File System Counters
+		FILE: Number of bytes read=198
+		FILE: Number of bytes written=715535
+		FILE: Number of read operations=0
+		FILE: Number of large read operations=0
+		FILE: Number of write operations=0
+		HDFS: Number of bytes read=848
+		HDFS: Number of bytes written=56
+		HDFS: Number of read operations=11
+		HDFS: Number of large read operations=0
+		HDFS: Number of write operations=2
+	Job Counters 
+		Launched map tasks=2
+		Launched reduce tasks=1
+		Data-local map tasks=2
+		Total time spent by all maps in occupied slots (ms)=42320
+		Total time spent by all reduces in occupied slots (ms)=20360
+		Total time spent by all map tasks (ms)=10580
+		Total time spent by all reduce tasks (ms)=5090
+		Total vcore-milliseconds taken by all map tasks=10580
+		Total vcore-milliseconds taken by all reduce tasks=5090
+		Total megabyte-milliseconds taken by all map tasks=10833920
+		Total megabyte-milliseconds taken by all reduce tasks=5212160
+	Map-Reduce Framework
+		Map input records=12
+		Map output records=12
+		Map output bytes=168
+		Map output materialized bytes=204
+		Input split bytes=254
+		Combine input records=0
+		Combine output records=0
+		Reduce input groups=4
+		Reduce shuffle bytes=204
+		Reduce input records=12
+		Reduce output records=4
+		Spilled Records=24
+		Shuffled Maps =2
+		Failed Shuffles=0
+		Merged Map outputs=2
+		GC time elapsed (ms)=338
+		CPU time spent (ms)=2630
+		Physical memory (bytes) snapshot=1768312832
+		Virtual memory (bytes) snapshot=8334565376
+		Total committed heap usage (bytes)=1591738368
+		Peak Map Physical memory (bytes)=782585856
+		Peak Map Virtual memory (bytes)=2844188672
+		Peak Reduce Physical memory (bytes)=204365824
+		Peak Reduce Virtual memory (bytes)=2647490560
+	Shuffle Errors
+		BAD_ID=0
+		CONNECTION=0
+		IO_ERROR=0
+		WRONG_LENGTH=0
+		WRONG_MAP=0
+		WRONG_REDUCE=0
+	File Input Format Counters 
+		Bytes Read=594
+	File Output Format Counters 
+		Bytes Written=56
+21/04/21 21:34:00 INFO streaming.StreamJob: Output directory: /user/admin/make_year_count
