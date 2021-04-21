@@ -2,7 +2,7 @@
 
 import sys
 
-# input comes from STDIN (standard input)
+# Output cumulative count as value for each Make/Year key
 
 last_makeyear = None
 total = 0

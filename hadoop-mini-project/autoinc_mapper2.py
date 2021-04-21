@@ -2,7 +2,7 @@
 
 import sys
 
-# input comes from STDIN (standard input)
+# For each accident, output make/year as key, 1 as value.
 
 for line in sys.stdin:
 

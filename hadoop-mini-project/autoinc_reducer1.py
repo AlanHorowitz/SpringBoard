@@ -2,6 +2,9 @@
 
 import sys
 
+# Only output the records with incident_type 'A', copying make and year from type 'I' records.
+# Vin_number is the key; incident_type, make and year are the data.
+
 
 class GroupMaster:
     def __init__(self):
@@ -18,7 +21,7 @@ def flush(group_master):
     for _ in range(group_master.accident_count):
         key = group_master.vin
         value = ",".join(["A", group_master.make, group_master.year])
-        print '%s\t%s' % (key, value)
+        print "%s\t%s" % (key, value)
 
 
 def reset(group_master):
