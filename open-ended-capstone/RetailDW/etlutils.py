@@ -7,15 +7,20 @@ from psycopg2.extensions import connection, cursor
 
 from RetailDW.sqltypes import Table, Column
 
-DEFAULT_INSERT_VALUES: Dict[str, object] = {
-    "INTEGER": 98,
-    "VARCHAR": "AAA",
-    "FLOAT": 5.0,
-    "REAL": 5.0,
-    "DATE": "2021-02-11 12:52:47",
-    "TINYINT": 0,
-    "BOOLEAN": True,
-}
+# ETL history table records a row for each extract.  The prior to_timestamp is used
+# to limit source system reads to unseen records.
+
+ETL_HISTORY_CREATE_MYSQL = """
+CREATE TABLE IF NOT EXISTS etl_history
+( id INT NOT NULL AUTO_INCREMENT,
+  table_name VARCHAR(80),
+  from_timestamp TIMESTAMP(6), 
+  to_timestamp TIMESTAMP(6),
+  n_inserts INT,
+  n_updates INT,
+  PRIMARY KEY (id)
+);
+"""
 
 DATE_LOW = datetime(1980, 1, 1)  # timestamp preceding all simulations
 
@@ -26,6 +31,22 @@ def create_table(conn: connection, create_sql: str) -> None:
     cur.execute(create_sql)
     conn.commit()
     cur.close()
+
+
+def create_source_tables(source_connection: connection, tables: List[Table]) -> None:
+    """Create tables for postgres source system."""
+
+    for table in tables:
+        create_table(source_connection, table.get_create_sql_postgres())
+
+
+def create_target_tables(target_connection: connection, tables: List[Table]) -> None:
+    """Create tables for mySQL target system.  Include etl_history table."""
+
+    for table in tables:
+        create_table(target_connection, table.get_create_sql_mysql())
+
+    create_table(target_connection, ETL_HISTORY_CREATE_MYSQL)
 
 
 def load_source_table(
@@ -55,13 +76,13 @@ def load_source_table(
         A tuple, (n_inserted, n_updated), representing the number of rows inserted and updated. 
         In the future these may differ from the input values.
     """
+    cur: cursor = conn.cursor(cursor_factory=DictCursor)
+    table.preload(cur)
 
     table_name = table.get_name()
     primary_key_column = table.get_primary_key()
     updated_at_column = table.get_updated_at()
     column_names = ",".join(table.get_column_names())  # for SELECT statements
-
-    cur: cursor = conn.cursor(cursor_factory=DictCursor)
 
     cur.execute(f"SELECT COUNT(*), MAX({primary_key_column}) from {table_name};")
     result: DictRow = cur.fetchone()
@@ -99,17 +120,7 @@ def load_source_table(
 
         insert_records = []
         for pk in range(next_key, next_key + n_inserts):
-
-            d: List[object] = []
-            for col in table.get_columns():
-                if col.isPrimaryKey():
-                    d.append(pk)
-                elif col.isInsertedAt() or col.isUpdatedAt():
-                    d.append(timestamp)
-                else:
-                    d.append(DEFAULT_INSERT_VALUES[col.get_type()])
-
-            insert_records.append(tuple(d))
+            insert_records.append(table.getNewRow(pk, timestamp))
 
         values_substitutions = ",".join(
             ["%s"] * n_inserts
@@ -122,23 +133,9 @@ def load_source_table(
 
         conn.commit()
 
+    table.postload()
+
     return n_inserts, n_updates
-
-
-# ETL history table records a row for each extract.  The prior to_timestamp is used
-# to limit source system reads to unseen records.
-
-ETL_HISTORY_CREATE_MYSQL = """
-CREATE TABLE IF NOT EXISTS etl_history
-( id INT NOT NULL AUTO_INCREMENT,
-  table_name VARCHAR(80),
-  from_timestamp TIMESTAMP(6), 
-  to_timestamp TIMESTAMP(6),
-  n_inserts INT,
-  n_updates INT,
-  PRIMARY KEY (id)
-);
-"""
 
 
 def etl_history_get_last_update(trg_cursor: cursor, table_name: str) -> datetime:
@@ -235,5 +232,8 @@ def extract_table_to_target(
     )
 
     trg_conn.commit()
+
+    src_cursor.close()
+    trg_cursor.close()
 
     return (n_inserts, n_updates, from_timestamp, to_timestamp)

@@ -1,0 +1,19 @@
+version: "2"
+services:
+  postgres:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment: 
+      - POSTGRES_USER=user1
+      - POSTGRES_PASSWORD=user1
+      - POSTGRES_DB=retaildw
+  mysql:
+    image: mysql:8.0.23
+    ports:
+      - "3306:3306"
+    environment: 
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_USER=user1
+      - MYSQL_PASSWORD=user1
+      - MYSQL_DATABASE=retaildw
