@@ -1,3 +1,4 @@
+import configparser
 import csv
 import mysql.connector
 from mysql.connector import connect
@@ -26,22 +27,24 @@ GROUP BY event_name
 ORDER BY SUM(num_tickets) DESC LIMIT 3;
 """
 
-def get_db_connection():
+
+def get_db_connection(config):
     connection = None
     try:
-        connection = mysql.connector.connect(user='alan',
-                                            password='alan',
-                                            host='localhost',
-                                            port='3306',
-                                            database='pipeline')
+        connection = mysql.connector.connect(user=config['mysqlDB']['user'],
+                                             password=config['mysqlDB']['password'],
+                                             host=config['mysqlDB']['host'],
+                                             port=config['mysqlDB']['port'],
+                                             database=config['mysqlDB']['database'])
     except Exception as error:
         print('Error while connecting to database', error)
 
     return connection
 
+
 def load_third_party(connection, file_path_csv):
     cursor = connection.cursor()
-    
+
     with open(file_path_csv, 'r') as f:
         reader = csv.reader(f, delimiter=',')
         for row in reader:
@@ -51,8 +54,9 @@ def load_third_party(connection, file_path_csv):
     cursor.close()
     return
 
+
 def query_popular_tickets(connection):
-        
+
     cursor = connection.cursor()
     cursor.execute(MOST_POPULAR_SQL)
     records = cursor.fetchall()
@@ -62,12 +66,13 @@ def query_popular_tickets(connection):
 
 if __name__ == '__main__':
 
-    connection = get_db_connection()
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    connection = get_db_connection(config)
     load_third_party(connection, CSV_FILEPATH)
     records = query_popular_tickets(connection)
-    
+
     print("Here are the most popular tickets in the last month:")
     for rec in records:
         print('-', rec[0])
-
-
