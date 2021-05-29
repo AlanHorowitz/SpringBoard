@@ -1,4 +1,4 @@
-from RetailDW.sqltypes import Table, Column
+from util.sqltypes import Table, Column
 from typing import List
 
 class OperationalSystem:

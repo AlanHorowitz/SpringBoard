@@ -1,5 +1,7 @@
-from .proto import TableBatch
 from typing import List
+from collections import namedtuple
+
+GeneratorItem = namedtuple("GeneratorItem", ["table_object", "n_inserts", "n_updates"])
 
 class Generator():
 
@@ -7,9 +9,9 @@ class Generator():
         # get postgres connection
         pass
 
-    def run(self, batch : List[TableBatch]) -> None:
+    def run(self, batch : List[GeneratorItem]) -> None:
         for b in batch:
-            pass
+            print(b)
             # opSystem open
             # while get next update (generator function) looping factor
                 # save local

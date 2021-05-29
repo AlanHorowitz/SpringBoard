@@ -8,7 +8,7 @@ from psycopg2.extensions import connection
 import mysql.connector
 from mysql.connector import connect
 
-from RetailDW.etlutils import (
+from util.etlutils import (
     create_table,
     create_source_tables,
     create_target_tables,
@@ -22,7 +22,7 @@ from RetailDW.product import (
     PRODUCT_CREATE_SQL_MYSQL,
 )
 
-from RetailDW.store import (
+from .store import (
     STORE_TABLE,
     STORE_CREATE_SQL_PG,
     STORE_CREATE_SQL_MYSQL,

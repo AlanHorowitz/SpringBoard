@@ -1,6 +1,7 @@
-from RetailDW.sqltypes import Table, Column
+from util.sqltypes import Table, Column
 from typing import List
-from RetailDW.generator.OperationalSystem import OperationalSystem
+from .OperationalSystem import OperationalSystem
+
 
 class ECommerceOperationalSystem(OperationalSystem):
     def __init__(self) -> None:
@@ -9,6 +10,9 @@ class ECommerceOperationalSystem(OperationalSystem):
 
     def add_tables(tables : List[Table]) -> None:
         # create all the postgres tables
+        pass
+
+    def remove_tables():
         pass
 
     def open(table : Table) -> None:

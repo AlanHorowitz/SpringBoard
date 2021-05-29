@@ -1,6 +1,6 @@
-from RetailDW.sqltypes import Column, Table
-from RetailDW.product import PRODUCT_TABLE
-from RetailDW.store import STORE_TABLE
+from util.sqltypes import Table, Column
+from .product import PRODUCT_TABLE
+from .store import STORE_TABLE
 
 STORE_SALES_CREATE_SQL_PG = """
 CREATE TABLE IF NOT EXISTS store_sales (

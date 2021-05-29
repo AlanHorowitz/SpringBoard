@@ -1,4 +1,4 @@
-from RetailDW.sqltypes import Column, Table
+from util.sqltypes import Table, Column
 
 PRODUCT_CREATE_SQL_PG = """
 CREATE TABLE IF NOT EXISTS Product (
