@@ -1,7 +1,7 @@
 from collections import namedtuple
 from util.sqltypes import Table
-from generator import InStoreOperationalSystem
-# from generator import ECommerceOperationalSystem
+# from generator import InStoreOperationalSystem
+from generator import ECommerceOperationalSystem
 # from generator import ProductOperationalSystem
 from generator.Generator import Generator, GeneratorItem 
 
@@ -9,12 +9,16 @@ from tables.product import PRODUCT_TABLE
 from tables.store import STORE_TABLE
 from tables.store_sales import STORE_SALES_TABLE
 
-# eCommerceOpSystem = ECommerceOperationalSystem() 
+gen = Generator()
+
+
+eCommerceOpSystem = ECommerceOperationalSystem() 
 # inStoreOpSystem = InStoreOperationalSystem() 
 # productOpSystem = ProductOperationalSystem()
 
 # # Associate tables with operational systems;  
-# eCommerceOpSystem.add_tables([PRODUCT_TABLE]) 
+eCommerceOpSystem.add_tables([PRODUCT_TABLE, STORE_TABLE]) 
+gen.add_tables()
 # # inStoreOpSystem.add_tables([table1, table2])
 # # productOpSystem.add_tables([table1, table2])
 
@@ -25,13 +29,13 @@ DailyOperations = [
         ],
         [
             GeneratorItem(PRODUCT_TABLE, 5, 50),
-            GeneratorItem(STORE_TABLE, 0, 2),
-            GeneratorItem(STORE_SALES_TABLE, 50000, 0),
-        ],
-        [
-            GeneratorItem(PRODUCT_TABLE, 10, 30),
-            GeneratorItem(STORE_TABLE, 1, 0),
-            GeneratorItem(STORE_SALES_TABLE, 50000, 0),
+            GeneratorItem(STORE_TABLE, 10, 20),
+        #     GeneratorItem(STORE_SALES_TABLE, 50000, 0),
+        # ],
+        # [
+        #     GeneratorItem(PRODUCT_TABLE, 10, 30),
+        #     GeneratorItem(STORE_TABLE, 1, 0),
+        #     GeneratorItem(STORE_SALES_TABLE, 50000, 0),
         ],
     ]
 
