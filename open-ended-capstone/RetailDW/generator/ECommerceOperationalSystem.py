@@ -9,7 +9,7 @@ from psycopg2.extensions import connection, cursor
 from util.etlutils import create_table
 
 
-class ECommerceOperationalSystem(OperationalSystem):
+class eCommerceOperationalSystem(OperationalSystem):
     def __init__(self) -> None:
         # open connection to postgres
         self.connection: connection = psycopg2.connect(
@@ -18,7 +18,7 @@ class ECommerceOperationalSystem(OperationalSystem):
 
         self.cur: cursor = self.connection.cursor(cursor_factory=DictCursor)
         self.cur.execute("CREATE SCHEMA ECOMMERCE;")
-        self.cur.execute("SET SEARCH PATH TO ECOMMERCE;")
+        self.cur.execute("SET SEARCH_PATH TO ECOMMERCE;")
         self.connection.commit()
        
         pass

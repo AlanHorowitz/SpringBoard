@@ -5,7 +5,7 @@ from datetime import datetime
 from psycopg2.extras import DictCursor, DictRow
 from psycopg2.extensions import connection, cursor
 
-from RetailDW.sqltypes import Table, Column
+from util.sqltypes import Table, Column
 
 # ETL history table records a row for each extract.  The prior to_timestamp is used
 # to limit source system reads to unseen records.

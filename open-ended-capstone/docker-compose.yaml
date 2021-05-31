@@ -8,6 +8,13 @@ services:
       - POSTGRES_USER=user1
       - POSTGRES_PASSWORD=user1
       - POSTGRES_DB=retaildw
+  pgadmin:
+    image: dpage/pgadmin4
+    ports: 
+      - "80:80"
+    environment: 
+      - PGADMIN_DEFAULT_EMAIL=admin
+      - PGADMIN_DEFAULT_PASSWORD=admin
   # mysql:
   #   image: mysql:8.0.23
   #   ports:

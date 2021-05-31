@@ -1,4 +1,4 @@
-from generator.OperationalSystem import OperationalSystem
+from .OperationalSystem import OperationalSystem
 from typing import List, Tuple
 from collections import namedtuple
 from util.sqltypes import Table, Column
@@ -16,19 +16,23 @@ GeneratorItem = namedtuple("GeneratorItem", ["table_object", "n_inserts", "n_upd
 class Generator():
 
     def __init__(self) -> None:
-        self.generator_db_connection: connection = psycopg2.connect(
+        self.connection: connection = psycopg2.connect(
         "dbname=retaildw host=172.17.0.1 user=user1 password=user1"
         )
         self.cur: cursor = self.connection.cursor(cursor_factory=DictCursor)
         self.cur.execute("CREATE SCHEMA GENERATOR;")
-        self.cur.execute("SET SEARCH PATH TO GENERATOR;")
+        self.cur.execute("SET SEARCH_PATH TO GENERATOR;")
         self.connection.commit()
         pass
 
     def run(self, batch : List[GeneratorItem]) -> None:
         for b in batch:
+            table : Table = b.table_object
+            opSystem : OperationalSystem = table.getOperationalSystem()
             i_rows, u_rows  = self.generate(b.table_object, b.n_inserts, b.n_updates, datetime.now())
             print(b)
+            opSystem.insert(table, i_rows)
+            opSystem.update(table, u_rows)
             # opSystem open
             # while get next update (generator function) looping factor
                 # save local
@@ -74,7 +78,7 @@ class Generator():
             In the future these may differ from the input values.
         """
 
-        conn = self.generator_db_connection
+        conn = self.connection
         cur: cursor = conn.cursor(cursor_factory=DictCursor)
         table.preload(cur)
 

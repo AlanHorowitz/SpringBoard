@@ -136,6 +136,8 @@ class Table:
             self._columns
         )
 
+        self.operationalSystem = None
+
     def preload(self, cur: cursor) -> None:
         """ Load foreign key tables for valid references when generating records.  Assume 
         these tables fit in memory for now.  Update the xrefDict with result set and count.
@@ -216,3 +218,11 @@ class Table:
         """ Return a random eligible update column."""
         i = random.randint(0, len(self._update_columns) - 1)
         return self._update_columns[i]
+
+    def setOperationalSystem(self, op: object) -> None:
+        """ Associate table with host operational system."""
+        self.operationalSystem = op
+
+    def getOperationalSystem(self) -> object:
+        """ Return operational system hosting table."""
+        return self.operationalSystem
