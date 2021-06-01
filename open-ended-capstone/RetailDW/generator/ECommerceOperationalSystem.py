@@ -38,8 +38,46 @@ class eCommerceOperationalSystem(OperationalSystem):
     def close(table):
         pass
 
-    def insert(table, records):
-        pass
+    def insert(self, table, records):
+        
+        n_inserts = len(records)
+        table_name = table.get_name()
+        column_names = ",".join(table.get_column_names()) 
+        if n_inserts > 0:
+            
+            values_substitutions = ",".join(
+                ["%s"] * n_inserts
+            )  # each %s holds one tuple row
 
-    def update(table, records):
-        pass
+            self.cur.execute(
+                f"INSERT INTO {table_name} ({column_names}) values {values_substitutions}",
+                records,
+            )
+
+            self.connection.commit()
+        
+
+    def update(self, table, records):
+        """ Perform updates with delete then insert. """
+        
+        n_delete_inserts = len(records)
+        table_name = table.get_name()
+        primary_key_column = table.get_primary_key()
+        
+        if n_delete_inserts > 0:
+
+            keys = tuple([r[primary_key_column] for r in records])
+
+            print('keys:', keys)
+
+            self.cur.execute(
+                f"DELETE FROM {table_name} WHERE {primary_key_column} in %s;",
+                (keys,),
+            )
+
+            print(self.cur.rowcount, 'deleted')
+
+            self.connection.commit()            
+            insert_records = [tuple(dr.values()) for dr in records]
+            self.insert(table, insert_records)
+

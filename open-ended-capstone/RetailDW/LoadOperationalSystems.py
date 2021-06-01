@@ -11,7 +11,6 @@ from tables.store_sales import STORE_SALES_TABLE
 
 gen = Generator()
 
-
 eCommerceOpSystem = eCommerceOperationalSystem() 
 # inStoreOpSystem = InStoreOperationalSystem() 
 # productOpSystem = ProductOperationalSystem()

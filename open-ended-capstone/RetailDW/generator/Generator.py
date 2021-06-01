@@ -1,3 +1,4 @@
+from re import U
 from .OperationalSystem import OperationalSystem
 from typing import List, Tuple
 from collections import namedtuple
@@ -92,6 +93,8 @@ class Generator():
         row_count = result[0]
         next_key = 1 if result[1] == None else result[1] + 1
 
+        update_records : List[DictRow] = []
+
         if n_updates > 0:
 
             n_updates = min(n_updates, row_count)
@@ -103,18 +106,18 @@ class Generator():
                 f" WHERE {primary_key_column} IN ({update_keys});"
             )
 
-            result = cur.fetchall()
+            update_records = cur.fetchall()
 
-            for r in result:
+            for r in update_records:
                 key_value = r[primary_key_column]
                 update_column = table.get_update_column().get_name()
-                update_column_value = r[update_column]
+                r[update_column] = r[update_column] + "_UPD"
                 cur.execute(
                     f"UPDATE {table_name}"
-                    f" SET {update_column} = concat('{update_column_value}', '_UPD'),"
+                    f" SET {update_column} = %s,"
                     f" {updated_at_column} = %s"
-                    f" WHERE {primary_key_column} = {key_value}",
-                    [timestamp],
+                    f" WHERE {primary_key_column} = %s",
+                    [r[update_column], timestamp, r[primary_key_column]],
                 )
 
             conn.commit()            
@@ -138,5 +141,5 @@ class Generator():
 
         table.postload()
 
-        return insert_records, result
+        return insert_records, update_records
 

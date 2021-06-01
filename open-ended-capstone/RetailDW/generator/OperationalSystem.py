@@ -14,10 +14,10 @@ class OperationalSystem:
     def close(table):
         pass
 
-    def insert(table, records):
+    def insert(self, table, records):
         pass
 
-    def update(table, records):
+    def update(self, table, records):
         pass
 
 
